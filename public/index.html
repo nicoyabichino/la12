@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificación de la Juntada</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Clasificación de Puntos</h1>
+    <div class="password-container">
+        <label for="password">Clave de edición:</label>
+        <input type="password" id="password" placeholder="Ingresa la clave">
+        <button id="validar-btn">Validar</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Puntos</th>
+                <th>Asistencias</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-cuerpo">
+            </tbody>
+    </table>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
