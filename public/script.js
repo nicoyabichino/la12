@@ -1,5 +1,5 @@
-const API_URL = 'http://localhost:3000/api/jugadores';
-const VALIDAR_URL = 'http://localhost:3000/api/validar-clave';
+const API_URL = '/api/jugadores';
+const VALIDAR_URL = '/api/validar-clave';
 
 const socket = io();
 
