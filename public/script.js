@@ -122,11 +122,13 @@ async function validarClave() {
     }
 
     try {
-        const response = await fetch(VALIDAR_URL, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-        });
+        const response = await fetch('/api/validar-clave', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ password: 'la-clave-del-input' })
+})
 
         const data = await response.json();
 
