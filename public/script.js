@@ -123,7 +123,7 @@ async function validarClave() {
 
     try {
         const response = await fetch(VALIDAR_URL, {
-            method: 'POST',
+            method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
