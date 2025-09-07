@@ -4,16 +4,16 @@ const cors = require('cors');
 const http = require('http'); 
 const { Server } = require('socket.io'); 
 
-// Define tu clave secreta aquí
-const CLAVE_SECRETA = 'josuelloron';
+// La clave secreta se lee desde una variable de entorno de Render
+const CLAVE_SECRETA = process.env.CLAVE_SECRETA;
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const server = http.createServer(app); 
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "*",
         methods: ["GET", "PUT"]
     }
 });
@@ -28,10 +28,8 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-// Esta línea le dice a Express que sirva los archivos de la carpeta 'public'
 app.use(express.static('public'));
 
-// Endpoint para validar la clave
 app.post('/api/validar-clave', (req, res) => {
     const { password } = req.body;
     if (password === CLAVE_SECRETA) {
@@ -41,7 +39,6 @@ app.post('/api/validar-clave', (req, res) => {
     }
 });
 
-// Endpoint para obtener a todos los jugadores
 app.get('/api/jugadores', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM jugadores');
@@ -52,12 +49,10 @@ app.get('/api/jugadores', async (req, res) => {
     }
 });
 
-// Endpoint para actualizar un jugador
 app.put('/api/jugadores/:id', async (req, res) => {
     const { id } = req.params;
     const { puntos, asistencias, nombre, password } = req.body;
 
-    // Validación de la clave
     if (password !== CLAVE_SECRETA) {
         return res.status(403).json({ error: 'Clave incorrecta. Acceso denegado.' });
     }
@@ -66,7 +61,6 @@ app.put('/api/jugadores/:id', async (req, res) => {
     const params = [];
     let paramIndex = 1;
 
-    // Construir la consulta de forma dinámica
     if (puntos !== undefined) {
         query += `puntos = $${paramIndex++}, `;
         params.push(puntos);
