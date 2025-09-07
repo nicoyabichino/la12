@@ -30,8 +30,8 @@ app.use(express.json());
 
 app.use(express.static('public'));
 
-app.get('/api/validar-clave', (req, res) => {
-    const { password } = req.query; // Cambia .body por .query
+app.post('/api/validar-clave', (req, res) => {
+    const { password } = req.body;
     if (password === CLAVE_SECRETA) {
         res.status(200).json({ mensaje: 'Clave correcta', esValida: true });
     } else {
@@ -79,7 +79,7 @@ app.put('/api/jugadores/:id', async (req, res) => {
     }
 
     query = query.slice(0, -2);
-    
+
     query += ` WHERE id = $${paramIndex} RETURNING *`;
     params.push(id);
 
