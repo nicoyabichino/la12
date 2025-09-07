@@ -19,11 +19,10 @@ const io = new Server(server, {
 });
 
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'puntos_la12',
-    password: '1234',
-    port: 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 app.use(cors());
