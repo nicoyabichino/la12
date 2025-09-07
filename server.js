@@ -20,6 +20,7 @@ const io = new Server(server, {
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    database: 'puntos_la12',
     ssl: {
         rejectUnauthorized: false
     }
