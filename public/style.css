@@ -4,27 +4,29 @@ body {
     min-height: 100vh;
     margin: 0;
     
-    background-color: #f0f0f0; /* Un color base por si las imágenes no cargan */
-}
-
-/* Contenedor principal para organizar los elementos */
-.main-container {
+    /* Configuración para las dos imágenes de fondo */
+    background-image: url('./images/la12.jpeg'), url('./images/la12+zamo.jpeg');
+    background-size: cover, cover; /* Las imágenes cubren el área */
+    background-position: left center, right center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    
+    /* Usamos Flexbox para organizar el contenido */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 20px;
     box-sizing: border-box;
-    min-height: 100vh;
-    width: 100%;
 }
 
 h1 {
     font-size: 3rem;
-    color: rgb(6, 6, 6);
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-    margin: 0 0 20px 0; /* Espacio para el botón de clave */
+    color: white; /* Cambiado a blanco para que resalte en las imágenes */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    margin: 0 0 20px 0;
     text-align: center;
+    padding-top: 20px;
 }
 
 /* Contenedor del input y botón de clave */
@@ -33,7 +35,11 @@ h1 {
     flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
-    text-align: center;
+    color: white; /* Para que el texto sea visible */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente para mejor visibilidad */
+    padding: 10px;
+    border-radius: 8px;
 }
 
 .password-container label {
@@ -45,8 +51,9 @@ h1 {
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
-    width: 250px; /* Ancho fijo para el input */
+    width: 250px;
     margin-bottom: 10px;
+    box-sizing: border-box; /* Asegura que el padding no cambie el ancho */
 }
 
 #validar-btn {
@@ -69,9 +76,9 @@ table {
     width: 100%;
     max-width: 600px;
     border-collapse: collapse;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    background-color: rgb(255, 255, 255);
-    margin: 0 auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+    margin-top: 20px;
 }
 
 th, td {
@@ -93,6 +100,13 @@ td[contenteditable="true"]:focus {
 
 /* Media queries para pantallas más pequeñas */
 @media (max-width: 768px) {
+    body {
+        /* En móviles, se apilan las imágenes verticalmente para que se vean bien */
+        background-image: url('./images/la12.jpeg'), url('./images/la12+zamo.jpeg');
+        background-size: 100% 50%, 100% 50%;
+        background-position: top center, bottom center;
+    }
+
     h1 {
         font-size: 2rem;
     }
