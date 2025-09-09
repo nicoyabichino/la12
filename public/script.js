@@ -15,10 +15,10 @@ async function fetchAndRenderJugadores() {
             if (a.puntos < b.puntos) {
                 return 1;
             }
-            if (a.asistencias > b.asistencias) {
+            if (a.asistencias < b.asistencias) {
                 return -1;
             }
-            if (a.asistencias < b.asistencias) {
+            if (a.asistencias > b.asistencias) {
                 return 1;
             }
             return 0;
