@@ -43,8 +43,18 @@
         <button onclick="ver('tabla')" id="btn-tabla" class="active">Tabla</button>
         <button onclick="ver('historial')" id="btn-historial">Historial</button>
         <button onclick="ver('reglamento')" id="btn-reglamento">Reglamento</button>
+        <button onclick="ver('eventos')" id="btn-eventos">📅 Eventos</button>
     </div>
-
+<div id="eventos" class="seccion">
+    <h3>📅 Próximas Juntadas y Fechas</h3>
+    <div id="lista-eventos"></div>
+    
+    <div id="controles-eventos" style="display:none; border-top:1px solid #444; padding-top:15px; margin-top:15px;">
+        <input type="text" id="nombre-evento" placeholder="Nombre (Ej: Asado en lo de Nico)">
+        <input type="date" id="fecha-evento">
+        <button onclick="crearEvento()" style="background:var(--oro); color:black;">Agendar</button>
+    </div>
+</div>
     <div class="controles">
         <input type="password" id="password" placeholder="Clave del Dios de la tabla">
         <button onclick="validarYGuardarClave()" style="background: #444;">Acceder</button>
@@ -107,7 +117,7 @@ const CLAVE_OCULTA = "dGhlcmlhbnM=";
                 status.style.color = "#44ff44";
                 document.getElementById('password').value = ""; // Limpiamos el input
                 document.getElementById('nuevo-nombre').disabled = false;
-                // Dentro del if(btoa(input) === CLAVE_OCULTA)
+                document.getElementById('controles-eventos').style.display = "block";
         document.getElementById('controles-reglamento').style.display = "block";
         document.getElementById('btn-agregar').disabled = false;
         document.getElementById('btn-agregar').style.opacity = "1";
@@ -259,6 +269,57 @@ window.borrarRegla = async (id) => {
     if (obtenerAcceso() && confirm("¿Borrar esta regla?")) {
         await set(ref(db, `reglamento/${id}`), null);
     }
+};
+    // --- LÓGICA DE EVENTOS ---
+
+// Escuchar Eventos de Firebase
+onValue(ref(db, 'eventos'), (snap) => {
+    const data = snap.val();
+    const div = document.getElementById('lista-eventos');
+    div.innerHTML = '';
+    
+    const lista = [];
+    for(let id in data) lista.push({id, ...data[id]});
+    lista.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha
+
+    lista.forEach(ev => {
+        const item = document.createElement('div');
+        item.className = 'historial-item';
+        // Formateamos la fecha para que sea igual a la del historial
+        const fechaFormateada = new Date(ev.fecha + "T00:00:00").toLocaleDateString('es-AR');
+        
+        item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <span class="fecha">${fechaFormateada}</span>
+                    <div style="font-size:1.2em; font-weight:bold;">${ev.nombre}</div>
+                </div>
+                <button onclick="consultarFecha('${fechaFormateada}')" style="background:var(--oro); color:black; font-size:0.8em;">Ver Puntos</button>
+            </div>
+            ${obtenerAcceso() ? `<button onclick="borrarEvento('${ev.id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:0.7em;">Eliminar Evento</button>` : ''}
+        `;
+        div.appendChild(item);
+    });
+});
+
+window.crearEvento = async () => {
+    const nombre = document.getElementById('nombre-evento').value;
+    const fecha = document.getElementById('fecha-evento').value;
+    if(!nombre || !fecha || !obtenerAcceso()) return;
+    await push(ref(db, 'eventos'), { nombre, fecha });
+    document.getElementById('nombre-evento').value = '';
+};
+
+window.borrarEvento = async (id) => {
+    if(confirm("¿Borrar fecha?")) await set(ref(db, `eventos/${id}`), null);
+};
+
+// LA MAGIA: Al tocar "Ver Puntos", te lleva al historial filtrado por esa fecha
+window.consultarFecha = (fechaCorta) => {
+    ver('historial'); // Cambia a la pestaña historial
+    const filtro = document.getElementById('filtro-historial');
+    filtro.value = fechaCorta; // Pone la fecha en el buscador
+    renderHistorial(); // Ejecuta el filtro
 };
     </script>
 </body>
