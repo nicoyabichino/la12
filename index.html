@@ -96,6 +96,15 @@
 .galeria-grid img:hover { transform: scale(1.05); z-index: 2; }
 
 .btn-eliminar { width: 100%; background: none; color: #ff4444; border: 1px dashed #ff4444; margin-top: 20px; font-size: 0.8em; }
+        .foto-galeria {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #333;
+    display: block;
+    cursor: pointer;
+}
     </style>
 </head>
 <body>
@@ -432,18 +441,42 @@ function cargarFotos(evId) {
 
         for (let id in data) {
             const imgUrl = data[id];
+            const fotoId = id; // El ID único de la foto en Firebase
+
+            // Contenedor para la foto y el botón de borrar
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+
             const imgElement = document.createElement('img');
             imgElement.src = imgUrl;
-            
-            // Cuando hacés click, se abre el lightbox
+            imgElement.className = 'foto-galeria'; // Usamos clase para el CSS
             imgElement.onclick = () => {
-                const lb = document.getElementById('lightbox');
-                const fotoGrande = document.getElementById('foto-grande');
-                fotoGrande.src = imgUrl;
-                lb.style.display = 'flex';
+                document.getElementById('foto-grande').src = imgUrl;
+                document.getElementById('lightbox').style.display = 'flex';
             };
             
-            div.appendChild(imgElement);
+            wrapper.appendChild(imgElement);
+
+            // SI ES ADMIN, agregamos el botón de borrar
+            if (obtenerAcceso()) {
+                const btnBorrar = document.createElement('button');
+                btnBorrar.innerHTML = '🗑️';
+                btnBorrar.style = `
+                    position: absolute; top: 5px; right: 5px; 
+                    background: rgba(255,0,0,0.7); border: none; 
+                    border-radius: 50%; color: white; cursor: pointer;
+                    padding: 5px; font-size: 10px; z-index: 10;
+                `;
+                btnBorrar.onclick = (e) => {
+                    e.stopPropagation(); // Para que no se abra la foto al tocar borrar
+                    if(confirm("¿Borrar esta foto para siempre?")) {
+                        set(ref(db, `fotos/${evId}/${fotoId}`), null);
+                    }
+                };
+                wrapper.appendChild(btnBorrar);
+            }
+
+            div.appendChild(wrapper);
         }
     });
 }
