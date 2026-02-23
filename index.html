@@ -1,20 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<style>
-    #calendar { max-width: 900px; margin: 20px auto; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
-    .fc-daygrid-event { cursor: pointer; }
-    .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #444; }
-    .fc-header-toolbar { flex-wrap: wrap; gap: 5px; }
-    #visor-fotos { display:none; margin-top: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; }
-    .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
-    .galeria img { width: 100%; height: 100px; object-fit: cover; border-radius: 5px; }
-</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La 12 - Tabla de puntos</title>
+    <title>La 12 - Gestión de Puntos</title>
     <style>
         :root { --oro: #ffcc00; --fondo: #1a1a1a; }
         body { 
@@ -41,9 +30,18 @@
         .controles { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
         input { padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; margin: 5px; }
         
-        .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; }
+        /* Estilos Calendario */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .dia { padding: 10px 0; border-radius: 5px; cursor: pointer; font-size: 0.9em; background: rgba(255,255,255,0.05); }
+        .dia:hover { background: rgba(255,255,255,0.2); }
+        .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
+        
+        .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
+        .galeria img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #444; }
+
+        .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; text-align: left; }
         .fecha { font-size: 0.75em; color: var(--oro); font-weight: bold; }
-        .cambio-valor { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -56,50 +54,11 @@
         <button onclick="ver('reglamento')" id="btn-reglamento">Reglamento</button>
         <button onclick="ver('eventos')" id="btn-eventos">📅 Eventos</button>
     </div>
-<div id="eventos" class="seccion">
-    <div id="calendario-mini">
-        <div class="cal-header">
-            <button onclick="cambiarMes(-1)">◀</button>
-            <h3 id="mes-anio"></h3>
-            <button onclick="cambiarMes(1)">▶</button>
-        </div>
-        <div id="dias-reducidos" class="cal-grid"></div>
-    </div>
 
-    <div id="visor-evento" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
-        <h4 id="titulo-evento-sel"></h4>
-        <button id="btn-ver-historial-ev" style="font-size:0.8em; background:var(--oro); color:black;">Ver Puntos</button>
-        
-        <div style="margin-top:15px;">
-            <label style="cursor:pointer; background:#444; padding:8px; border-radius:5px; display:inline-block;">
-                📸 Subir Foto del Celu
-                <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
-            </label>
-        </div>
-        <div id="galeria-fotos" class="galeria"></div>
-        <button id="btn-borrar-ev" onclick="borrarEventoActual()" style="display:none; color:red; background:none; border:none; margin-top:10px;">Eliminar Evento</button>
-    </div>
-
-    <div id="controles-eventos" style="display:none; border-top:1px solid #444; margin-top:15px; padding-top:10px;">
-        <input type="text" id="nombre-evento" placeholder="Nombre del evento" style="width:60%">
-        <input type="date" id="fecha-evento" style="width:30%">
-        <button onclick="crearEvento()">Crear</button>
-    </div>
-</div>
-
-<style>
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-    .dia { padding: 10px 0; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
-    .dia:hover { background: rgba(255,255,255,0.1); }
-    .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
-    .dia-actual { border: 1px solid var(--oro); }
-    .galeria img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 1px solid #444; }
-</style>
     <div class="controles">
-        <input type="password" id="password" placeholder="Clave del Dios de la tabla">
+        <input type="password" id="password" placeholder="Clave del Dios">
         <button onclick="validarYGuardarClave()" style="background: #444;">Acceder</button>
-        <p id="status-clave" style="font-size: 0.8em; margin-top: 5px; color: #aaa;">Si no tenes la clave tomatela rray.</p>
+        <p id="status-clave" style="font-size: 0.8em; margin-top: 5px; color: #aaa;">Acceso requerido para editar.</p>
     </div>
 
     <div id="tabla" class="seccion active-section">
@@ -107,29 +66,58 @@
             <thead><tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr></thead>
             <tbody id="tabla-cuerpo"></tbody>
         </table>
-     <div id="controles-admin" style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
-    <input type="text" id="nuevo-nombre" placeholder="Nombre nuevo" disabled>
-    <button id="btn-agregar" onclick="agregarJugador()" style="background: var(--oro); color: black; opacity: 0.5; cursor: not-allowed;" disabled>Agregar nuevo Therian</button>
-</div>
+        <div id="controles-admin" style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
+            <input type="text" id="nuevo-nombre" placeholder="Nombre nuevo" disabled>
+            <button id="btn-agregar" onclick="agregarJugador()" style="background: var(--oro); color: black; opacity: 0.5; cursor: not-allowed;" disabled>Agregar nuevo Therian</button>
+        </div>
     </div>
 
     <div id="historial" class="seccion">
-        <input type="text" id="filtro-historial" placeholder="Filtrar por nombre..." onkeyup="renderHistorial()" style="width: 90%; margin-bottom: 15px;">
+        <input type="text" id="filtro-historial" placeholder="Filtrar por nombre o fecha..." onkeyup="renderHistorial()" style="width: 90%; margin-bottom: 15px;">
         <div id="lista-historial"></div>
     </div>
 
-<div id="reglamento" class="seccion">
-    <h3>⚖️ Reglamento</h3>
-    <div id="lista-reglamento" style="text-align: left; margin-bottom: 20px;">
+    <div id="reglamento" class="seccion">
+        <h3>⚖️ Reglamento</h3>
+        <div id="lista-reglamento" style="text-align: left; margin-bottom: 20px;"></div>
+        <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
+            <input type="text" id="nuevo-regla" placeholder="Nueva regla..." style="width: 70%;">
+            <button onclick="agregarRegla()" style="background: var(--oro); color: black;">Añadir</button>
         </div>
-    
-    <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
-        <input type="text" id="nuevo-regla" placeholder="Ej: Faltar al asado: 50 pts" style="width: 70%;">
-        <button onclick="agregarRegla()" style="background: var(--oro); color: black;">Añadir Regla</button>
     </div>
-</div>
 
-<script type="module">
+    <div id="eventos" class="seccion">
+        <div id="calendario-mini">
+            <div class="cal-header">
+                <button onclick="cambiarMes(-1)">◀</button>
+                <h3 id="mes-anio"></h3>
+                <button onclick="cambiarMes(1)">▶</button>
+            </div>
+            <div id="dias-reducidos" class="cal-grid"></div>
+        </div>
+
+        <div id="visor-evento" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
+            <h4 id="titulo-evento-sel"></h4>
+            <button id="btn-ver-historial-ev" style="font-size:0.8em; background:var(--oro); color:black;">Ver Puntos de este día</button>
+            
+            <div style="margin-top:15px;">
+                <label style="cursor:pointer; background:#444; padding:8px; border-radius:5px; display:inline-block;">
+                    📸 Subir Foto del Celu
+                    <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
+                </label>
+            </div>
+            <div id="galeria-fotos" class="galeria"></div>
+            <button id="btn-borrar-ev" onclick="borrarEventoActual()" style="display:none; color:red; background:none; border:none; margin-top:15px; cursor:pointer;">Eliminar Evento</button>
+        </div>
+
+        <div id="controles-eventos" style="display:none; border-top:1px solid #444; margin-top:15px; padding-top:10px;">
+            <input type="text" id="nombre-evento" placeholder="Nombre de la juntada" style="width:55%">
+            <input type="date" id="fecha-evento" style="width:35%">
+            <button onclick="crearEvento()" style="background:var(--oro); color:black;">Crear</button>
+        </div>
+    </div>
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -142,33 +130,41 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const CLAVE_OCULTA = "dGhlcmlhbnM="; // Clave: therians
         
-        // "bGExMg==" es "la12" codificado. Nadie lo sabe si mira el código.
-const CLAVE_OCULTA = "dGhlcmlhbnM=";
         let cacheHistorial = [];
+        let fechaVisual = new Date();
+        let eventosCache = {};
+        let eventoSeleccionadoId = null;
 
+        // --- SEGURIDAD ---
         window.validarYGuardarClave = () => {
             const input = document.getElementById('password').value.trim().toLowerCase();
             const status = document.getElementById('status-clave');
             
-            // Convertimos lo que escribís a Base64 para comparar
             if(btoa(input) === CLAVE_OCULTA) {
                 sessionStorage.setItem('acceso_v12', 'ok');
-                status.innerText = "✅ Eso mi rrey. Ya podés editar.";
+                status.innerText = "✅ Bienvenido, Dios de la tabla.";
                 status.style.color = "#44ff44";
-                document.getElementById('password').value = ""; // Limpiamos el input
-                document.getElementById('nuevo-nombre').disabled = false;
-                document.getElementById('controles-eventos').style.display = "block";
-        document.getElementById('controles-reglamento').style.display = "block";
-        document.getElementById('btn-agregar').disabled = false;
-        document.getElementById('btn-agregar').style.opacity = "1";
-        document.getElementById('btn-agregar').style.cursor = "pointer";
+                document.getElementById('password').value = "";
+                habilitarEdicion();
             } else {
-                alert("¡Clave incorrecta Papi! jajode!.");
+                alert("Clave incorrecta.");
             }
         };
 
         const obtenerAcceso = () => sessionStorage.getItem('acceso_v12') === 'ok';
+
+        function habilitarEdicion() {
+            if(!obtenerAcceso()) return;
+            document.getElementById('nuevo-nombre').disabled = false;
+            document.getElementById('btn-agregar').disabled = false;
+            document.getElementById('btn-agregar').style.opacity = "1";
+            document.getElementById('btn-agregar').style.cursor = "pointer";
+            document.getElementById('controles-reglamento').style.display = "block";
+            document.getElementById('controles-eventos').style.display = "block";
+            renderCalendario(); // Refrescar para mostrar botón borrar si aplica
+        }
 
         // --- NAVEGACIÓN ---
         window.ver = (id) => {
@@ -191,11 +187,34 @@ const CLAVE_OCULTA = "dGhlcmlhbnM=";
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
                     <td><b>${j.nombre}</b></td>
-                    <td contenteditable="true" onblur="modificar('${j.id}', 'puntos', this.innerText, ${j.puntos}, '${j.nombre}')">${j.puntos}</td>
-                    <td contenteditable="true" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>`;
+                    <td contenteditable="${obtenerAcceso()}" onblur="modificar('${j.id}', 'puntos', this.innerText, ${j.puntos}, '${j.nombre}')">${j.puntos}</td>
+                    <td contenteditable="${obtenerAcceso()}" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>`;
                 tabla.appendChild(fila);
             });
         });
+
+        window.modificar = async (id, campo, nuevoVal, viejoVal, nombre) => {
+            const num = parseInt(nuevoVal);
+            if (isNaN(num) || num === viejoVal) return;
+            if (!obtenerAcceso()) { alert("Sin clave!"); location.reload(); return; }
+
+            const motivo = prompt(`Motivo para ${nombre}:`);
+            if (!motivo) { location.reload(); return; }
+
+            await update(ref(db, `jugadores/${id}`), { [campo]: num });
+            await push(ref(db, 'historial'), {
+                jugadorNombre: nombre, campo, antes: viejoVal, ahora: num, diff: num - viejoVal,
+                comentario: motivo, fecha: new Date().toLocaleString('es-AR')
+            });
+        };
+
+        window.agregarJugador = async () => {
+            const nombre = document.getElementById('nuevo-nombre').value.trim();
+            if (!nombre || !obtenerAcceso()) return;
+            const id = nombre.toLowerCase().replace(/\s/g, '_');
+            await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
+            document.getElementById('nuevo-nombre').value = '';
+        };
 
         // --- HISTORIAL ---
         onValue(ref(db, 'historial'), (snap) => {
@@ -206,268 +225,131 @@ const CLAVE_OCULTA = "dGhlcmlhbnM=";
         window.renderHistorial = () => {
             const filtro = document.getElementById('filtro-historial').value.toLowerCase();
             const div = document.getElementById('lista-historial');
-            if (!div) return;
             div.innerHTML = '';
-            cacheHistorial.filter(h => h.jugadorNombre.toLowerCase().includes(filtro)).forEach(h => {
+            cacheHistorial.filter(h => h.jugadorNombre.toLowerCase().includes(filtro) || h.fecha.includes(filtro)).forEach(h => {
                 const color = h.diff > 0 ? "#ff4444" : "#44ff44";
                 div.innerHTML += `
                     <div class="historial-item">
                         <div class="fecha">${h.fecha}</div>
-                        <b>${h.jugadorNombre}</b>: <span style="color:${color}">${h.diff > 0 ? '+'+h.diff : h.diff} ${h.campo}</span> 
-                        <span style="font-size:0.8em; color:#aaa;">(Antes: ${h.antes} - Ahora: ${h.ahora})</span>
-                        <div style="font-style:italic; margin-top:5px;">"${h.comentario}"</div>
+                        <b>${h.jugadorNombre}</b>: <span style="color:${color}">${h.diff > 0 ? '+'+h.diff : h.diff} ${h.campo}</span>
+                        <div style="font-size:0.8em; opacity:0.7;">"${h.comentario}"</div>
                     </div>`;
             });
         };
 
-        // --- LÓGICA DE EDICIÓN ---
-        window.modificar = async (id, campo, nuevoValor, viejoValor, nombreReal) => {
-            if (!obtenerAcceso()) {
-                alert("Poné la clave arriba primero, rray.");
-                location.reload(); return;
+        // --- REGLAMENTO ---
+        onValue(ref(db, 'reglamento'), (snap) => {
+            const data = snap.val();
+            const div = document.getElementById('lista-reglamento');
+            div.innerHTML = '';
+            for (let id in data) {
+                div.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span ${obtenerAcceso()?'contenteditable="true" onblur="editarRegla(\''+id+'\', this.innerText)"':''}>• ${data[id]}</span>
+                        ${obtenerAcceso() ? `<button onclick="borrarRegla('${id}')" style="color:red; background:none; border:none;">✕</button>` : ''}
+                    </div>`;
             }
-            const num = parseInt(nuevoValor);
-            if (isNaN(num) || num === viejoValor) return;
+        });
 
-            const comentario = prompt(`Motivo para ${nombreReal}:`);
-            if (!comentario) { location.reload(); return; }
-
-            await update(ref(db, `jugadores/${id}`), { [campo]: num });
-            const nuevoHRef = push(ref(db, 'historial'));
-            await set(nuevoHRef, {
-                jugadorNombre: nombreReal,
-                campo: campo,
-                antes: viejoValor,
-                ahora: num,
-                diff: num - viejoValor,
-                comentario: comentario,
-                fecha: new Date().toLocaleString('es-AR')
-            });
+        window.agregarRegla = async () => {
+            const t = document.getElementById('nuevo-regla').value;
+            if(t && obtenerAcceso()) await push(ref(db, 'reglamento'), t);
+            document.getElementById('nuevo-regla').value = '';
         };
 
-window.agregarJugador = async () => {
-    // Si algún vivo intenta llamar a la función por consola, esto lo frena
-    if (!obtenerAcceso()) { 
-        alert("¡No tenés permiso, rray!"); 
-        return; 
-    }
-    
-    const nombre = document.getElementById('nuevo-nombre').value;
-    if (!nombre) return;
-    const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
-    await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
-    document.getElementById('nuevo-nombre').value = '';
-};
-    // Si ya estaba logueado al recargar, habilitar botones
-if (obtenerAcceso()) {
-    document.getElementById('nuevo-nombre').disabled = false;
-    document.getElementById('btn-agregar').disabled = false;
-    document.getElementById('btn-agregar').style.opacity = "1";
-    document.getElementById('btn-agregar').style.cursor = "pointer";
-}
-    // --- LÓGICA DEL REGLAMENTO ---
+        window.borrarRegla = async (id) => { if(confirm("¿Borrar?") && obtenerAcceso()) await set(ref(db, `reglamento/${id}`), null); };
 
-// Escuchar cambios en el reglamento
-onValue(ref(db, 'reglamento'), (snap) => {
-    const data = snap.val();
-    const div = document.getElementById('lista-reglamento');
-    div.innerHTML = '';
-    
-    for (let id in data) {
-        const item = document.createElement('div');
-        item.style.marginBottom = "10px";
-        item.style.display = "flex";
-        item.style.justifyContent = "space-between";
-        
-        // El texto es editable si tenés la clave
-        item.innerHTML = `
-            <span ${obtenerAcceso() ? 'contenteditable="true"' : ''} 
-                  onblur="editarRegla('${id}', this.innerText)" 
-                  style="flex-grow: 1; padding: 5px;">
-                • ${data[id]}
-            </span>
-            ${obtenerAcceso() ? `<button onclick="borrarRegla('${id}')" style="background:none; color:red; border:none; padding:0 10px; cursor:pointer;">✕</button>` : ''}
-        `;
-        div.appendChild(item);
-    }
-});
+        // --- CALENDARIO Y EVENTOS ---
+        window.cambiarMes = (dir) => { fechaVisual.setMonth(fechaVisual.getMonth() + dir); renderCalendario(); };
 
-window.agregarRegla = async () => {
-    const texto = document.getElementById('nuevo-regla').value;
-    if (!texto || !obtenerAcceso()) return;
-    await push(ref(db, 'reglamento'), texto);
-    document.getElementById('nuevo-regla').value = '';
-};
+        function renderCalendario() {
+            const grid = document.getElementById('dias-reducidos');
+            const mesAnio = document.getElementById('mes-anio');
+            if(!grid) return;
+            grid.innerHTML = '';
+            
+            const mes = fechaVisual.getMonth();
+            const anio = fechaVisual.getFullYear();
+            mesAnio.innerText = fechaVisual.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
 
-window.editarRegla = async (id, nuevoTexto) => {
-    if (!obtenerAcceso()) return;
-    // Quitamos el "• " del inicio si el usuario lo dejó
-    const limpio = nuevoTexto.replace('• ', '').trim();
-    if (limpio) await set(ref(db, `reglamento/${id}`), limpio);
-};
+            let primerDia = new Date(anio, mes, 1).getDay();
+            for(let i=0; i < (primerDia === 0 ? 6 : primerDia - 1); i++) grid.innerHTML += '<div></div>';
 
-window.borrarRegla = async (id) => {
-    if (obtenerAcceso() && confirm("¿Borrar esta regla?")) {
-        await set(ref(db, `reglamento/${id}`), null);
-    }
-};
-    // --- LÓGICA DE EVENTOS ---
-
-let calendar;
-let eventoSeleccionadoId = null;
-
-// Inicializar Calendario
-document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'es',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
-        events: [],
-        eventClick: (info) => abrirEvento(info.event)
-    });
-    calendar.render();
-});
-
-// Cargar Eventos desde Firebase
-onValue(ref(db, 'eventos'), (snap) => {
-    const data = snap.val();
-    const evs = [];
-    for(let id in data) {
-        evs.push({ id: id, title: data[id].nombre, start: data[id].fecha, allDay: true });
-    }
-    calendar.removeAllEvents();
-    calendar.addEventSource(evs);
-});
-
-// Abrir detalle del evento
-window.abrirEvento = (ev) => {
-    eventoSeleccionadoId = ev.id;
-    document.getElementById('visor-evento').style.display = "block";
-    document.getElementById('titulo-evento-sel').innerText = ev.title;
-    const fCorta = new Date(ev.start + "T00:00:00").toLocaleDateString('es-AR');
-    document.getElementById('fecha-evento-sel').innerText = fCorta;
-    
-    document.getElementById('btn-ver-historial-ev').onclick = () => consultarFecha(fCorta);
-    
-    if(obtenerAcceso()) document.getElementById('admin-ev').style.display = "block";
-    
-    cargarFotos(ev.id);
-};
-
-// --- LÓGICA DE FOTOS (Cualquiera puede subir) ---
-window.subirFoto = async () => {
-    const url = document.getElementById('url-foto').value;
-    if(!url || !eventoSeleccionadoId) return;
-    await push(ref(db, `fotos/${eventoSeleccionadoId}`), url);
-    document.getElementById('url-foto').value = '';
-};
-
-function cargarFotos(evId) {
-    onValue(ref(db, `fotos/${evId}`), (snap) => {
-        const div = document.getElementById('galeria-fotos');
-        div.innerHTML = '';
-        const data = snap.val();
-        for(let id in data) {
-            div.innerHTML += `<img src="${data[id]}" onerror="this.src='https://via.placeholder.com/100?text=Error+Link'">`;
+            let diasEnMes = new Date(anio, mes + 1, 0).getDate();
+            for(let d=1; d <= diasEnMes; d++) {
+                let fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                let div = document.createElement('div');
+                div.className = 'dia' + (eventosCache[fechaStr] ? ' con-evento' : '');
+                div.innerText = d;
+                div.onclick = () => verEvento(fechaStr);
+                grid.appendChild(div);
+            }
         }
-    });
-}
 
-window.crearEvento = async () => {
-    const nombre = document.getElementById('nombre-evento').value;
-    const fecha = document.getElementById('fecha-evento').value;
-    if(!nombre || !fecha || !obtenerAcceso()) return;
-    await push(ref(db, 'eventos'), { nombre, fecha });
-};
+        onValue(ref(db, 'eventos'), (snap) => {
+            const data = snap.val() || {};
+            eventosCache = {};
+            for(let id in data) eventosCache[data[id].fecha] = { id, ...data[id] };
+            renderCalendario();
+        });
 
-window.borrarEventoActual = async () => {
-    if(confirm("¿Borrar este evento y sus fotos?") && obtenerAcceso()) {
-        await set(ref(db, `eventos/${eventoSeleccionadoId}`), null);
-        await set(ref(db, `fotos/${eventoSeleccionadoId}`), null);
-        document.getElementById('visor-evento').style.display = "none";
-    }
-};
-    let fechaVisual = new Date();
-let eventosCache = {};
-let eventoSeleccionadoId = null;
+        window.verEvento = (fechaStr) => {
+            const ev = eventosCache[fechaStr];
+            const visor = document.getElementById('visor-evento');
+            if(!ev) { visor.style.display = 'none'; return; }
+            
+            eventoSeleccionadoId = ev.id;
+            visor.style.display = 'block';
+            document.getElementById('titulo-evento-sel').innerText = ev.nombre;
+            const fLoc = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR');
+            document.getElementById('btn-ver-historial-ev').onclick = () => {
+                document.getElementById('filtro-historial').value = fLoc;
+                renderHistorial();
+                ver('historial');
+            };
+            
+            document.getElementById('btn-borrar-ev').style.display = obtenerAcceso() ? 'block' : 'none';
+            cargarFotos(ev.id);
+        };
 
-// --- CALENDARIO MANUAL ---
-window.cambiarMes = (dir) => {
-    fechaVisual.setMonth(fechaVisual.getMonth() + dir);
-    renderCalendario();
-};
+        window.crearEvento = async () => {
+            const n = document.getElementById('nombre-evento').value;
+            const f = document.getElementById('fecha-evento').value;
+            if(n && f && obtenerAcceso()) await push(ref(db, 'eventos'), { nombre: n, fecha: f });
+        };
 
-function renderCalendario() {
-    const mesAnio = document.getElementById('mes-anio');
-    const grid = document.getElementById('dias-reducidos');
-    grid.innerHTML = '';
-    
-    const mes = fechaVisual.getMonth();
-    const anio = fechaVisual.getFullYear();
-    mesAnio.innerText = fechaVisual.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+        window.borrarEventoActual = async () => {
+            if(confirm("¿Borrar juntada?") && obtenerAcceso()) {
+                await set(ref(db, `eventos/${eventoSeleccionadoId}`), null);
+                await set(ref(db, `fotos/${eventoSeleccionadoId}`), null);
+                document.getElementById('visor-evento').style.display = 'none';
+            }
+        };
 
-    // Llenar espacios vacíos
-    let primerDia = new Date(anio, mes, 1).getDay();
-    for(let i=0; i < (primerDia === 0 ? 6 : primerDia - 1); i++) grid.innerHTML += '<div></div>';
+        window.subirFotoDirecta = () => {
+            const file = document.getElementById('input-foto').files[0];
+            if (!file || !eventoSeleccionadoId) return;
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                await push(ref(db, `fotos/${eventoSeleccionadoId}`), reader.result);
+                alert("Foto lista!");
+            };
+            reader.readAsDataURL(file);
+        };
 
-    // Días del mes
-    let diasEnMes = new Date(anio, mes + 1, 0).getDate();
-    for(let d=1; d <= diasEnMes; d++) {
-        let fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        let div = document.createElement('div');
-        div.className = 'dia';
-        if(eventosCache[fechaStr]) div.classList.add('con-evento');
-        div.innerText = d;
-        div.onclick = () => verEvento(fechaStr);
-        grid.appendChild(div);
-    }
-}
+        function cargarFotos(evId) {
+            onValue(ref(db, `fotos/${evId}`), (snap) => {
+                const div = document.getElementById('galeria-fotos');
+                div.innerHTML = '';
+                const data = snap.val();
+                for(let id in data) div.innerHTML += `<img src="${data[id]}">`;
+            });
+        }
 
-// Cargar Eventos
-onValue(ref(db, 'eventos'), (snap) => {
-    const data = snap.val() || {};
-    eventosCache = {};
-    for(let id in data) eventosCache[data[id].fecha] = { id, ...data[id] };
-    renderCalendario();
-});
+        // Inicio
+        renderCalendario();
+        if(obtenerAcceso()) habilitarEdicion();
 
-function verEvento(fechaStr) {
-    const ev = eventosCache[fechaStr];
-    const visor = document.getElementById('visor-evento');
-    if(!ev) { visor.style.display = 'none'; return; }
-    
-    eventoSeleccionadoId = ev.id;
-    visor.style.display = 'block';
-    document.getElementById('titulo-evento-sel').innerText = ev.nombre;
-    document.getElementById('btn-ver-historial-ev').onclick = () => consultarFecha(new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR'));
-    
-    if(obtenerAcceso()) document.getElementById('btn-borrar-ev').style.display = 'block';
-    cargarFotos(ev.id);
-}
-
-// --- SUBIR FOTOS DESDE EL CELU ---
-window.subirFotoDirecta = () => {
-    const file = document.getElementById('input-foto').files[0];
-    if (!file || !eventoSeleccionadoId) return;
-
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-        const base64String = reader.result; // La foto convertida en texto
-        await push(ref(db, `fotos/${eventoSeleccionadoId}`), base64String);
-        alert("Foto subida!");
-    };
-    reader.readAsDataURL(file); // Lee el archivo del celu
-};
-
-function cargarFotos(evId) {
-    onValue(ref(db, `fotos/${evId}`), (snap) => {
-        const div = document.getElementById('galeria-fotos');
-        div.innerHTML = '';
-        const data = snap.val();
-        for(let id in data) div.innerHTML += `<img src="${data[id]}">`;
-    });
-}
     </script>
 </body>
 </html>
