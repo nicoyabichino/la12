@@ -76,7 +76,7 @@
         </ul>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -89,10 +89,10 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        // SEGURIDAD: Solo el Hash, nada de texto plano
+        const HASH_MAESTRO = "3312386"; 
         let cacheHistorial = [];
-
-// --- SISTEMA DE CLAVE ---
-        const HASH_MAESTRO = "3312386"; // Hash para la clave "la12"
 
         const generarHash = (str) => {
             let hash = 0;
@@ -103,21 +103,21 @@
             return hash.toString();
         };
 
+        // Función para validar
         window.validarYGuardarClave = () => {
-            // El .trim() elimina espacios accidentales
             const input = document.getElementById('password').value.trim().toLowerCase();
             const status = document.getElementById('status-clave');
             
             if(generarHash(input) === HASH_MAESTRO) {
-                localStorage.setItem('la12_clave_hash', HASH_MAESTRO);
-                status.innerText = "✅ Clave correcta. Ya podés editar.";
+                sessionStorage.setItem('sesion_activa', 'true');
+                status.innerText = "✅ Eso mi rrey. Ya podés editar.";
                 status.style.color = "#44ff44";
             } else {
                 alert("¡Clave incorrecta Papi! jajode!.");
             }
         };
 
-        const obtenerAcceso = () => localStorage.getItem('la12_clave_hash') === HASH_MAESTRO;
+        const obtenerAcceso = () => sessionStorage.getItem('sesion_activa') === 'true';
 
         // --- NAVEGACIÓN ---
         window.ver = (id) => {
@@ -131,6 +131,7 @@
         onValue(ref(db, 'jugadores'), (snap) => {
             const data = snap.val();
             const tabla = document.getElementById('tabla-cuerpo');
+            if (!tabla) return;
             tabla.innerHTML = '';
             const lista = [];
             for (let id in data) lista.push({id, ...data[id]});
@@ -154,6 +155,7 @@
         window.renderHistorial = () => {
             const filtro = document.getElementById('filtro-historial').value.toLowerCase();
             const div = document.getElementById('lista-historial');
+            if (!div) return;
             div.innerHTML = '';
             cacheHistorial.filter(h => h.jugadorNombre.toLowerCase().includes(filtro)).forEach(h => {
                 const color = h.diff > 0 ? "#ff4444" : "#44ff44";
@@ -169,10 +171,10 @@
 
         // --- LÓGICA DE EDICIÓN ---
         window.modificar = async (id, campo, nuevoValor, viejoValor, nombreReal) => {
-         if (!obtenerAcceso()) {
-    alert("No te olvides la clave mi rrray.");
-    location.reload(); return;
-}
+            if (!obtenerAcceso()) {
+                alert("Poné la clave arriba primero, rray.");
+                location.reload(); return;
+            }
             const num = parseInt(nuevoValor);
             if (isNaN(num) || num === viejoValor) return;
 
@@ -193,14 +195,13 @@
         };
 
         window.agregarJugador = async () => {
-            if (!obtenerAcceso()) { alert("Clave!"); return; }
+            if (!obtenerAcceso()) { alert("¡Clave!"); return; }
             const nombre = document.getElementById('nuevo-nombre').value;
             if (!nombre) return;
             const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
             await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
             document.getElementById('nuevo-nombre').value = '';
         };
-
     </script>
 </body>
 </html>
