@@ -3,108 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabla La 12</title>
+    <title>La 12 - Gestión de Faltas</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        table { border-collapse: collapse; width: 90%; max-width: 600px; background: #2d2d2d; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #444; }
-        th { background: #4a4a4a; color: #ffcc00; text-transform: uppercase; }
-        [contenteditable="true"] { background: #3d3d3d; border-radius: 4px; outline: none; transition: 0.3s; }
-        [contenteditable="true"]:focus { background: #555; box-shadow: inset 0 0 5px #ffcc00; }
-        .controles { margin-bottom: 20px; }
-        input { padding: 10px; border-radius: 5px; border: none; }
+        :root { --oro: #ffcc00; --fondo: #1a1a1a; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            /* Referencia a tu imagen en la carpeta public */
+            background: url('public/images/tu-imagen.jpg') no-repeat center center fixed; 
+            background-size: cover;
+            color: white; margin: 0; padding: 20px;
+        }
+        /* Capa oscura para que se lea el texto sobre el fondo */
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: -1;
+        }
+        .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; background: #333; color: white; transition: 0.3s; }
+        button.active { background: var(--oro); color: black; font-weight: bold; }
+        
+        .seccion { display: none; background: rgba(30, 30, 30, 0.9); padding: 20px; border-radius: 10px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        .active-section { display: block; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #444; text-align: center; }
+        th { color: var(--oro); background: rgba(0,0,0,0.3); }
+
+        .form-agregar { display: flex; gap: 10px; margin-top: 30px; justify-content: center; flex-wrap: wrap; border-top: 1px solid #555; padding-top: 20px; }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; }
+        
+        .historial-item { border-left: 4px solid var(--oro); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.05); text-align: left; border-radius: 0 8px 8px 0; }
+        .fecha { font-size: 0.75em; color: var(--oro); margin-bottom: 5px; font-weight: bold; }
+        .comentario { color: #ddd; font-style: italic; margin-top: 5px; display: block; }
     </style>
 </head>
 <body>
 
-    <h1>🏆 Tabla de Posiciones "La 12"</h1>
+    <h1>🏆 La 12 - Panel de Control</h1>
 
-    <div class="controles">
+    <div class="nav">
+        <button onclick="ver('tabla')" id="btn-tabla" class="active">Tabla</button>
+        <button onclick="ver('historial')" id="btn-historial">Historial</button>
+        <button onclick="ver('reglamento')" id="btn-reglamento">Reglamento</button>
+    </div>
+
+    <div class="controles" style="text-align: center; margin-bottom: 15px;">
         <input type="password" id="password" placeholder="Clave del Dios de la Tabla">
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Puntos</th>
-                <th>Asistencias</th>
-            </tr>
-        </thead>
-        <tbody id="tabla-cuerpo">
-            </tbody>
-    </table>
+    <div id="tabla" class="seccion active-section">
+        <table>
+            <thead>
+                <tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr>
+            </thead>
+            <tbody id="tabla-cuerpo"></tbody>
+        </table>
 
-<script type="module">
-    // Estos links ya vienen listos para que el navegador los entienda sin instalar nada
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        <div class="form-agregar">
+            <input type="text" id="nuevo-nombre" placeholder="Nombre del nuevo raye">
+            <button onclick="agregarJugador()" style="background: var(--oro); color: black;">+ Agregar a la lista</button>
+        </div>
+    </div>
 
-    // ACÁ PEGUÉ TU CONFIGURACIÓN REAL
-    const firebaseConfig = {
-        apiKey: "AIzaSyCLa7nhMTqvOV5QuQdsfmKAGKHvjv4aEfI",
-        authDomain: "tabla-la12.firebaseapp.com",
-        databaseURL: "https://tabla-la12-default-rtdb.firebaseio.com",
-        projectId: "tabla-la12",
-        storageBucket: "tabla-la12.firebasestorage.app",
-        messagingSenderId: "614852547098",
-        appId: "1:614852547098:web:3298faf37fe28d965df7a3",
-        measurementId: "G-DBB7RFZRFK"
-    };
+    <div id="historial" class="seccion">
+        <h3>📜 Registro de Infracciones</h3>
+        <div id="lista-historial"></div>
+    </div>
 
-    // Inicializamos Firebase y la Base de Datos
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const jugadoresRef = ref(db, 'jugadores');
+    <div id="reglamento" class="seccion">
+        <h3>⚖️ Reglamento de Multas</h3>
+        <ul style="text-align: left; line-height: 2; font-size: 1.1em;">
+            <li>🚫 <b>Faltar sin avisar:</b> 10 puntos</li>
+            <li>⏳ <b>Llegar tarde (>20min):</b> 5 puntos</li>
+            <li>🎂 <b>Faltar por cumple:</b> 15 puntos (Imperdonable)</li>
+            <li>⚽ <b>No traer la pelota (si te toca):</b> 3 puntos</li>
+            <li>🍻 <b>No quedarse al tercer tiempo:</b> 2 puntos</li>
+        </ul>
+    </div>
 
-    // 2. ESCUCHAR CAMBIOS EN TIEMPO REAL
-    onValue(jugadoresRef, (snapshot) => {
-        const data = snapshot.val();
-        const tablaCuerpo = document.getElementById('tabla-cuerpo');
-        if (!tablaCuerpo) return;
-        
-        tablaCuerpo.innerHTML = '';
-        
-        const jugadores = [];
-        for (let id in data) { 
-            jugadores.push({ id, ...data[id] }); 
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Ordenamos: más puntos (faltas) arriba
-        jugadores.sort((a, b) => b.puntos - a.puntos);
+        // ==========================================
+        // COPIÁ TUS DATOS DE FIREBASE ACÁ ABAJO:
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLa7nhMTqvOV5QuQdsfmKAGKHvjv4aEfI",
+            authDomain: "tabla-la12.firebaseapp.com",
+            databaseURL: "https://tabla-la12-default-rtdb.firebaseio.com",
+            projectId: "tabla-la12",
+            storageBucket: "tabla-la12.firebasestorage.app",
+            messagingSenderId: "614852547098",
+            appId: "1:614852547098:web:3298faf37fe28d965df7a3"
+        };
+        // ==========================================
 
-        jugadores.forEach(j => {
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td>${j.nombre}</td>
-                <td contenteditable="true" onblur="guardar('${j.id}', 'puntos', this.innerText)">${j.puntos}</td>
-                <td contenteditable="true" onblur="guardar('${j.id}', 'asistencias', this.innerText)">${j.asistencias}</td>
-            `;
-            tablaCuerpo.appendChild(fila);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // NAVEGACIÓN ENTRE PESTAÑAS
+        window.ver = (id) => {
+            document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active-section');
+            document.getElementById('btn-' + id).classList.add('active');
+        };
+
+        // RENDER TABLA DE JUGADORES
+        onValue(ref(db, 'jugadores'), (snap) => {
+            const data = snap.val();
+            const tabla = document.getElementById('tabla-cuerpo');
+            if(!tabla) return;
+            tabla.innerHTML = '';
+            const lista = [];
+            for (let id in data) lista.push({id, ...data[id]});
+            
+            // Ordenar: Mas puntos (más faltas) primero
+            lista.sort((a,b) => b.puntos - a.puntos);
+            
+            lista.forEach(j => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td><b>${j.nombre}</b></td>
+                    <td contenteditable="true" onblur="modificar('${j.id}', 'puntos', this.innerText, ${j.puntos}, '${j.nombre}')">${j.puntos}</td>
+                    <td contenteditable="true" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>
+                `;
+                tabla.appendChild(fila);
+            });
         });
-    });
 
-    // 3. FUNCIÓN PARA GUARDAR (La clave es 'nico123', cambiala si querés)
-    window.guardar = async (id, campo, valor) => {
-        const pass = document.getElementById('password').value;
-        
-        if (pass !== "ladoce2026") { 
-            alert("¡Clave incorrecta Papi! jajode!");
-            // Recargamos para que el número vuelva a su valor original en la pantalla
-            location.reload(); 
-            return;
-        }
+        // RENDER HISTORIAL
+        onValue(ref(db, 'historial'), (snap) => {
+            const data = snap.val();
+            const div = document.getElementById('lista-historial');
+            if(!div) return;
+            div.innerHTML = '';
+            if(!data) { div.innerHTML = "<p>No hay registros todavía.</p>"; return; }
+            
+            const items = Object.values(data).reverse(); 
+            items.forEach(h => {
+                const color = h.cambio > 0 ? "#ff4444" : "#44ff44"; // Rojo si suma puntos (mala noticia)
+                div.innerHTML += `
+                    <div class="historial-item">
+                        <div class="fecha">${h.fecha}</div>
+                        <span><b>${h.jugadorNombre}</b>: <span style="color:${color}">${h.cambio > 0 ? '+'+h.cambio : h.cambio} ${h.campo}</span></span>
+                        <span class="comentario">"${h.comentario}"</span>
+                    </div>`;
+            });
+        });
 
-        const num = parseInt(valor);
-        if (isNaN(num)) return;
+        // MODIFICAR Y GENERAR HISTORIAL
+        window.modificar = async (id, campo, nuevoValor, viejoValor, nombreReal) => {
+            const pass = document.getElementById('password').value;
+            if (pass !== "nico123") { // CAMBIÁ TU CLAVE ACÁ
+                alert("¡Clave incorrecta Papi! jajode!");
+                location.reload(); 
+                return; 
+            }
+            
+            const num = parseInt(nuevoValor);
+            if (isNaN(num) || num === viejoValor) return;
 
-        try {
+            const comentario = prompt(`¿Por qué el cambio para ${nombreReal}?`);
+            if (comentario === null) { location.reload(); return; } // Si cancela el prompt
+
+            // 1. Actualizar DB
             await update(ref(db, `jugadores/${id}`), { [campo]: num });
-            console.log("Actualizado!");
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
-    };
-</script>
+
+            // 2. Crear entrada en historial
+            const nuevoHRef = push(ref(db, 'historial'));
+            await set(nuevoHRef, {
+                jugadorNombre: nombreReal,
+                campo: campo,
+                cambio: num - viejoValor,
+                comentario: comentario || "Sin motivo especificado",
+                fecha: new Date().toLocaleString('es-AR')
+            });
+        };
+
+        // AGREGAR JUGADOR NUEVO
+        window.agregarJugador = async () => {
+            const pass = document.getElementById('password').value;
+            const nombre = document.getElementById('nuevo-nombre').value;
+            if (pass !== "nico123") { alert("Clave mal para agregar!"); return; }
+            if (!nombre) return;
+
+            const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
+            await set(ref(db, `jugadores/${id}`), {
+                nombre: nombre,
+                puntos: 0,
+                asistencias: 0
+            });
+            document.getElementById('nuevo-nombre').value = '';
+            alert(`${nombre} fue agregado a la lista de deudores.`);
+        };
+    </script>
 </body>
 </html>
