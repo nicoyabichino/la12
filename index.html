@@ -44,7 +44,13 @@
 .dia:active { transform: scale(0.9); } /* Efecto de click */
         .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
         
-        .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
+        .galeria-grid img { 
+    width: 100%; height: 100px; object-fit: cover; 
+    border-radius: 6px; border: 1px solid #333; 
+    transition: transform 0.2s; 
+    cursor: pointer; /* Esto pone la manito al pasar el mouse */
+}
+.galeria-grid img:hover { transform: scale(1.05); filter: brightness(1.2); }
         .galeria img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #444; }
 
         .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; text-align: left; }
@@ -172,6 +178,10 @@
             <button onclick="crearEvento()" style="background:var(--oro); color:black;">Crear</button>
         </div>
     </div>
+    <div id="lightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; cursor:zoom-out;" onclick="this.style.display='none'">
+    <span style="position:absolute; top:20px; right:30px; font-size:40px; color:white; font-weight:bold; cursor:pointer;">&times;</span>
+    <img id="foto-grande" src="" style="max-width:95%; max-height:95%; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -409,14 +419,34 @@ window.crearEvento = async () => {
             reader.readAsDataURL(file);
         };
 
-        function cargarFotos(evId) {
-            onValue(ref(db, `fotos/${evId}`), (snap) => {
-                const div = document.getElementById('galeria-fotos');
-                div.innerHTML = '';
-                const data = snap.val();
-                for(let id in data) div.innerHTML += `<img src="${data[id]}">`;
-            });
+function cargarFotos(evId) {
+    onValue(ref(db, `fotos/${evId}`), (snap) => {
+        const div = document.getElementById('galeria-fotos');
+        div.innerHTML = '';
+        const data = snap.val();
+        
+        if (!data) {
+            div.innerHTML = '<p style="font-size:0.8em; color:#666;">No hay fotos todavía.</p>';
+            return;
         }
+
+        for (let id in data) {
+            const imgUrl = data[id];
+            const imgElement = document.createElement('img');
+            imgElement.src = imgUrl;
+            
+            // Cuando hacés click, se abre el lightbox
+            imgElement.onclick = () => {
+                const lb = document.getElementById('lightbox');
+                const fotoGrande = document.getElementById('foto-grande');
+                fotoGrande.src = imgUrl;
+                lb.style.display = 'flex';
+            };
+            
+            div.appendChild(imgElement);
+        }
+    });
+}
 
         // Inicio
         renderCalendario();
