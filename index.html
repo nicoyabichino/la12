@@ -57,32 +57,45 @@
         <button onclick="ver('eventos')" id="btn-eventos">📅 Eventos</button>
     </div>
 <div id="eventos" class="seccion">
-    <div id="calendar"></div>
-
-    <div id="visor-evento" style="display:none; background:rgba(255,255,255,0.1); padding:20px; border-radius:10px;">
-        <h2 id="titulo-evento-sel"></h2>
-        <p id="fecha-evento-sel"></p>
-        <button id="btn-ver-historial-ev" style="background:var(--oro); color:black;">Ver Puntos de este día</button>
-        
-        <hr style="border:0.5px solid #444; margin:20px 0;">
-        
-        <h4>📸 Fotos de la juntada</h4>
-        <input type="text" id="url-foto" placeholder="Pegá link de la foto aquí">
-        <button onclick="subirFoto()" style="background:#44ff44; color:black;">Subir</button>
-        <div id="galeria-fotos" class="galeria"></div>
-        
-        <div id="admin-ev" style="display:none; margin-top:20px;">
-            <button onclick="borrarEventoActual()" style="background:red; color:white;">Eliminar Evento</button>
+    <div id="calendario-mini">
+        <div class="cal-header">
+            <button onclick="cambiarMes(-1)">◀</button>
+            <h3 id="mes-anio"></h3>
+            <button onclick="cambiarMes(1)">▶</button>
         </div>
+        <div id="dias-reducidos" class="cal-grid"></div>
     </div>
 
-    <div id="controles-eventos" style="display:none; border-top:1px solid #444; padding-top:15px; margin-top:15px;">
-        <h4>Crear Evento</h4>
-        <input type="text" id="nombre-evento" placeholder="Nombre">
-        <input type="date" id="fecha-evento">
-        <button onclick="crearEvento()" style="background:var(--oro); color:black;">Agendar</button>
+    <div id="visor-evento" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
+        <h4 id="titulo-evento-sel"></h4>
+        <button id="btn-ver-historial-ev" style="font-size:0.8em; background:var(--oro); color:black;">Ver Puntos</button>
+        
+        <div style="margin-top:15px;">
+            <label style="cursor:pointer; background:#444; padding:8px; border-radius:5px; display:inline-block;">
+                📸 Subir Foto del Celu
+                <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
+            </label>
+        </div>
+        <div id="galeria-fotos" class="galeria"></div>
+        <button id="btn-borrar-ev" onclick="borrarEventoActual()" style="display:none; color:red; background:none; border:none; margin-top:10px;">Eliminar Evento</button>
+    </div>
+
+    <div id="controles-eventos" style="display:none; border-top:1px solid #444; margin-top:15px; padding-top:10px;">
+        <input type="text" id="nombre-evento" placeholder="Nombre del evento" style="width:60%">
+        <input type="date" id="fecha-evento" style="width:30%">
+        <button onclick="crearEvento()">Crear</button>
     </div>
 </div>
+
+<style>
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .dia { padding: 10px 0; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
+    .dia:hover { background: rgba(255,255,255,0.1); }
+    .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
+    .dia-actual { border: 1px solid var(--oro); }
+    .galeria img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 1px solid #444; }
+</style>
     <div class="controles">
         <input type="password" id="password" placeholder="Clave del Dios de la tabla">
         <button onclick="validarYGuardarClave()" style="background: #444;">Acceder</button>
@@ -375,6 +388,86 @@ window.borrarEventoActual = async () => {
         document.getElementById('visor-evento').style.display = "none";
     }
 };
+    let fechaVisual = new Date();
+let eventosCache = {};
+let eventoSeleccionadoId = null;
+
+// --- CALENDARIO MANUAL ---
+window.cambiarMes = (dir) => {
+    fechaVisual.setMonth(fechaVisual.getMonth() + dir);
+    renderCalendario();
+};
+
+function renderCalendario() {
+    const mesAnio = document.getElementById('mes-anio');
+    const grid = document.getElementById('dias-reducidos');
+    grid.innerHTML = '';
+    
+    const mes = fechaVisual.getMonth();
+    const anio = fechaVisual.getFullYear();
+    mesAnio.innerText = fechaVisual.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+
+    // Llenar espacios vacíos
+    let primerDia = new Date(anio, mes, 1).getDay();
+    for(let i=0; i < (primerDia === 0 ? 6 : primerDia - 1); i++) grid.innerHTML += '<div></div>';
+
+    // Días del mes
+    let diasEnMes = new Date(anio, mes + 1, 0).getDate();
+    for(let d=1; d <= diasEnMes; d++) {
+        let fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        let div = document.createElement('div');
+        div.className = 'dia';
+        if(eventosCache[fechaStr]) div.classList.add('con-evento');
+        div.innerText = d;
+        div.onclick = () => verEvento(fechaStr);
+        grid.appendChild(div);
+    }
+}
+
+// Cargar Eventos
+onValue(ref(db, 'eventos'), (snap) => {
+    const data = snap.val() || {};
+    eventosCache = {};
+    for(let id in data) eventosCache[data[id].fecha] = { id, ...data[id] };
+    renderCalendario();
+});
+
+function verEvento(fechaStr) {
+    const ev = eventosCache[fechaStr];
+    const visor = document.getElementById('visor-evento');
+    if(!ev) { visor.style.display = 'none'; return; }
+    
+    eventoSeleccionadoId = ev.id;
+    visor.style.display = 'block';
+    document.getElementById('titulo-evento-sel').innerText = ev.nombre;
+    document.getElementById('btn-ver-historial-ev').onclick = () => consultarFecha(new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR'));
+    
+    if(obtenerAcceso()) document.getElementById('btn-borrar-ev').style.display = 'block';
+    cargarFotos(ev.id);
+}
+
+// --- SUBIR FOTOS DESDE EL CELU ---
+window.subirFotoDirecta = () => {
+    const file = document.getElementById('input-foto').files[0];
+    if (!file || !eventoSeleccionadoId) return;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+        const base64String = reader.result; // La foto convertida en texto
+        await push(ref(db, `fotos/${eventoSeleccionadoId}`), base64String);
+        alert("Foto subida!");
+    };
+    reader.readAsDataURL(file); // Lee el archivo del celu
+};
+
+function cargarFotos(evId) {
+    onValue(ref(db, `fotos/${evId}`), (snap) => {
+        const div = document.getElementById('galeria-fotos');
+        div.innerHTML = '';
+        const data = snap.val();
+        for(let id in data) div.innerHTML += `<img src="${data[id]}">`;
+    });
+}
     </script>
 </body>
 </html>
