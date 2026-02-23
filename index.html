@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<style>
+    #calendar { max-width: 900px; margin: 20px auto; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
+    .fc-daygrid-event { cursor: pointer; }
+    .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #444; }
+    .fc-header-toolbar { flex-wrap: wrap; gap: 5px; }
+    #visor-fotos { display:none; margin-top: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; }
+    .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
+    .galeria img { width: 100%; height: 100px; object-fit: cover; border-radius: 5px; }
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La 12 - Tabla de puntos</title>
@@ -46,11 +57,28 @@
         <button onclick="ver('eventos')" id="btn-eventos">📅 Eventos</button>
     </div>
 <div id="eventos" class="seccion">
-    <h3>📅 Próximas Juntadas y Fechas</h3>
-    <div id="lista-eventos"></div>
-    
+    <div id="calendar"></div>
+
+    <div id="visor-evento" style="display:none; background:rgba(255,255,255,0.1); padding:20px; border-radius:10px;">
+        <h2 id="titulo-evento-sel"></h2>
+        <p id="fecha-evento-sel"></p>
+        <button id="btn-ver-historial-ev" style="background:var(--oro); color:black;">Ver Puntos de este día</button>
+        
+        <hr style="border:0.5px solid #444; margin:20px 0;">
+        
+        <h4>📸 Fotos de la juntada</h4>
+        <input type="text" id="url-foto" placeholder="Pegá link de la foto aquí">
+        <button onclick="subirFoto()" style="background:#44ff44; color:black;">Subir</button>
+        <div id="galeria-fotos" class="galeria"></div>
+        
+        <div id="admin-ev" style="display:none; margin-top:20px;">
+            <button onclick="borrarEventoActual()" style="background:red; color:white;">Eliminar Evento</button>
+        </div>
+    </div>
+
     <div id="controles-eventos" style="display:none; border-top:1px solid #444; padding-top:15px; margin-top:15px;">
-        <input type="text" id="nombre-evento" placeholder="Nombre (Ej: Asado en lo de Nico)">
+        <h4>Crear Evento</h4>
+        <input type="text" id="nombre-evento" placeholder="Nombre">
         <input type="date" id="fecha-evento">
         <button onclick="crearEvento()" style="background:var(--oro); color:black;">Agendar</button>
     </div>
@@ -272,54 +300,80 @@ window.borrarRegla = async (id) => {
 };
     // --- LÓGICA DE EVENTOS ---
 
-// Escuchar Eventos de Firebase
+let calendar;
+let eventoSeleccionadoId = null;
+
+// Inicializar Calendario
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+        events: [],
+        eventClick: (info) => abrirEvento(info.event)
+    });
+    calendar.render();
+});
+
+// Cargar Eventos desde Firebase
 onValue(ref(db, 'eventos'), (snap) => {
     const data = snap.val();
-    const div = document.getElementById('lista-eventos');
-    div.innerHTML = '';
-    
-    const lista = [];
-    for(let id in data) lista.push({id, ...data[id]});
-    lista.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha
-
-    lista.forEach(ev => {
-        const item = document.createElement('div');
-        item.className = 'historial-item';
-        // Formateamos la fecha para que sea igual a la del historial
-        const fechaFormateada = new Date(ev.fecha + "T00:00:00").toLocaleDateString('es-AR');
-        
-        item.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <span class="fecha">${fechaFormateada}</span>
-                    <div style="font-size:1.2em; font-weight:bold;">${ev.nombre}</div>
-                </div>
-                <button onclick="consultarFecha('${fechaFormateada}')" style="background:var(--oro); color:black; font-size:0.8em;">Ver Puntos</button>
-            </div>
-            ${obtenerAcceso() ? `<button onclick="borrarEvento('${ev.id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:0.7em;">Eliminar Evento</button>` : ''}
-        `;
-        div.appendChild(item);
-    });
+    const evs = [];
+    for(let id in data) {
+        evs.push({ id: id, title: data[id].nombre, start: data[id].fecha, allDay: true });
+    }
+    calendar.removeAllEvents();
+    calendar.addEventSource(evs);
 });
+
+// Abrir detalle del evento
+window.abrirEvento = (ev) => {
+    eventoSeleccionadoId = ev.id;
+    document.getElementById('visor-evento').style.display = "block";
+    document.getElementById('titulo-evento-sel').innerText = ev.title;
+    const fCorta = new Date(ev.start + "T00:00:00").toLocaleDateString('es-AR');
+    document.getElementById('fecha-evento-sel').innerText = fCorta;
+    
+    document.getElementById('btn-ver-historial-ev').onclick = () => consultarFecha(fCorta);
+    
+    if(obtenerAcceso()) document.getElementById('admin-ev').style.display = "block";
+    
+    cargarFotos(ev.id);
+};
+
+// --- LÓGICA DE FOTOS (Cualquiera puede subir) ---
+window.subirFoto = async () => {
+    const url = document.getElementById('url-foto').value;
+    if(!url || !eventoSeleccionadoId) return;
+    await push(ref(db, `fotos/${eventoSeleccionadoId}`), url);
+    document.getElementById('url-foto').value = '';
+};
+
+function cargarFotos(evId) {
+    onValue(ref(db, `fotos/${evId}`), (snap) => {
+        const div = document.getElementById('galeria-fotos');
+        div.innerHTML = '';
+        const data = snap.val();
+        for(let id in data) {
+            div.innerHTML += `<img src="${data[id]}" onerror="this.src='https://via.placeholder.com/100?text=Error+Link'">`;
+        }
+    });
+}
 
 window.crearEvento = async () => {
     const nombre = document.getElementById('nombre-evento').value;
     const fecha = document.getElementById('fecha-evento').value;
     if(!nombre || !fecha || !obtenerAcceso()) return;
     await push(ref(db, 'eventos'), { nombre, fecha });
-    document.getElementById('nombre-evento').value = '';
 };
 
-window.borrarEvento = async (id) => {
-    if(confirm("¿Borrar fecha?")) await set(ref(db, `eventos/${id}`), null);
-};
-
-// LA MAGIA: Al tocar "Ver Puntos", te lleva al historial filtrado por esa fecha
-window.consultarFecha = (fechaCorta) => {
-    ver('historial'); // Cambia a la pestaña historial
-    const filtro = document.getElementById('filtro-historial');
-    filtro.value = fechaCorta; // Pone la fecha en el buscador
-    renderHistorial(); // Ejecuta el filtro
+window.borrarEventoActual = async () => {
+    if(confirm("¿Borrar este evento y sus fotos?") && obtenerAcceso()) {
+        await set(ref(db, `eventos/${eventoSeleccionadoId}`), null);
+        await set(ref(db, `fotos/${eventoSeleccionadoId}`), null);
+        document.getElementById('visor-evento').style.display = "none";
+    }
 };
     </script>
 </body>
