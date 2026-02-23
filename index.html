@@ -92,34 +92,33 @@
         const CLAVE_MAESTRA = "la12"; // <--- CAMBIALA ACÁ
         let cacheHistorial = [];
 
-        // --- SISTEMA DE CLAVE ---
-// Este código representa "ladoce2026" pero nadie puede saber qué es a simple vista
-const HASH_MAESTRO = "3312386"; // Este es el código secreto para "la12"
+// --- SISTEMA DE CLAVE ---
+        const HASH_MAESTRO = "3312386"; // Hash para la clave "la12"
 
-// Función simple para ocultar la clave
-const generarHash = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-    }
-    return hash.toString();
-};
+        const generarHash = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return hash.toString();
+        };
 
-window.validarYGuardarClave = () => {
-    const input = document.getElementById('password').value;
-    const status = document.getElementById('status-clave');
-    
-    if(generarHash(input) === HASH_MAESTRO) {
-        localStorage.setItem('la12_clave_hash', generarHash(input));
-        status.innerText = "✅ Clave correcta. Ya podés editar.";
-        status.style.color = "#44ff44";
-    } else {
-        alert("¡Clave incorrecta Papi! jajode!.");
-    }
-};
+        window.validarYGuardarClave = () => {
+            // El .trim() elimina espacios accidentales
+            const input = document.getElementById('password').value.trim().toLowerCase();
+            const status = document.getElementById('status-clave');
+            
+            if(generarHash(input) === HASH_MAESTRO) {
+                localStorage.setItem('la12_clave_hash', HASH_MAESTRO);
+                status.innerText = "✅ Clave correcta. Ya podés editar.";
+                status.style.color = "#44ff44";
+            } else {
+                alert("¡Clave incorrecta Papi! jajode!.");
+            }
+        };
 
-const obtenerAcceso = () => localStorage.getItem('la12_clave_hash') === HASH_MAESTRO;
+        const obtenerAcceso = () => localStorage.getItem('la12_clave_hash') === HASH_MAESTRO;
 
         // --- NAVEGACIÓN ---
         window.ver = (id) => {
