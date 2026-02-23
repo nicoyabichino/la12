@@ -90,34 +90,26 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // SEGURIDAD: Solo el Hash, nada de texto plano
-        const HASH_MAESTRO = "3312386"; 
+        // "bGExMg==" es "la12" codificado. Nadie lo sabe si mira el código.
+        const CLAVE_OCULTA = "bGExMg=="; 
         let cacheHistorial = [];
 
-        const generarHash = (str) => {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            return hash.toString();
-        };
-
-        // Función para validar
         window.validarYGuardarClave = () => {
             const input = document.getElementById('password').value.trim().toLowerCase();
             const status = document.getElementById('status-clave');
             
-            if(generarHash(input) === HASH_MAESTRO) {
-                sessionStorage.setItem('sesion_activa', 'true');
+            // Convertimos lo que escribís a Base64 para comparar
+            if(btoa(input) === CLAVE_OCULTA) {
+                sessionStorage.setItem('acceso_v12', 'ok');
                 status.innerText = "✅ Eso mi rrey. Ya podés editar.";
                 status.style.color = "#44ff44";
+                document.getElementById('password').value = ""; // Limpiamos el input
             } else {
                 alert("¡Clave incorrecta Papi! jajode!.");
             }
         };
 
-        const obtenerAcceso = () => sessionStorage.getItem('sesion_activa') === 'true';
+        const obtenerAcceso = () => sessionStorage.getItem('acceso_v12') === 'ok';
 
         // --- NAVEGACIÓN ---
         window.ver = (id) => {
