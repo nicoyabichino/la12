@@ -67,14 +67,16 @@
         <div id="lista-historial"></div>
     </div>
 
-    <div id="reglamento" class="seccion">
-        <h3>⚖️ Reglamento</h3>
-        <ul style="text-align: left; line-height: 2;">
-            <li>🚫 Faltar sin avisar: 10 pts</li>
-            <li>⏳ Llegar tarde: 5 pts</li>
-            <li>🎂 Faltar por cumple: 15 pts</li>
-        </ul>
+<div id="reglamento" class="seccion">
+    <h3>⚖️ Reglamento</h3>
+    <div id="lista-reglamento" style="text-align: left; margin-bottom: 20px;">
+        </div>
+    
+    <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
+        <input type="text" id="nuevo-regla" placeholder="Ej: Faltar al asado: 50 pts" style="width: 70%;">
+        <button onclick="agregarRegla()" style="background: var(--oro); color: black;">Añadir Regla</button>
     </div>
+</div>
 
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -105,6 +107,8 @@ const CLAVE_OCULTA = "dGhlcmlhbnM=";
                 status.style.color = "#44ff44";
                 document.getElementById('password').value = ""; // Limpiamos el input
                 document.getElementById('nuevo-nombre').disabled = false;
+                // Dentro del if(btoa(input) === CLAVE_OCULTA)
+        document.getElementById('controles-reglamento').style.display = "block";
         document.getElementById('btn-agregar').disabled = false;
         document.getElementById('btn-agregar').style.opacity = "1";
         document.getElementById('btn-agregar').style.cursor = "pointer";
@@ -210,6 +214,52 @@ if (obtenerAcceso()) {
     document.getElementById('btn-agregar').style.opacity = "1";
     document.getElementById('btn-agregar').style.cursor = "pointer";
 }
+    // --- LÓGICA DEL REGLAMENTO ---
+
+// Escuchar cambios en el reglamento
+onValue(ref(db, 'reglamento'), (snap) => {
+    const data = snap.val();
+    const div = document.getElementById('lista-reglamento');
+    div.innerHTML = '';
+    
+    for (let id in data) {
+        const item = document.createElement('div');
+        item.style.marginBottom = "10px";
+        item.style.display = "flex";
+        item.style.justifyContent = "space-between";
+        
+        // El texto es editable si tenés la clave
+        item.innerHTML = `
+            <span ${obtenerAcceso() ? 'contenteditable="true"' : ''} 
+                  onblur="editarRegla('${id}', this.innerText)" 
+                  style="flex-grow: 1; padding: 5px;">
+                • ${data[id]}
+            </span>
+            ${obtenerAcceso() ? `<button onclick="borrarRegla('${id}')" style="background:none; color:red; border:none; padding:0 10px; cursor:pointer;">✕</button>` : ''}
+        `;
+        div.appendChild(item);
+    }
+});
+
+window.agregarRegla = async () => {
+    const texto = document.getElementById('nuevo-regla').value;
+    if (!texto || !obtenerAcceso()) return;
+    await push(ref(db, 'reglamento'), texto);
+    document.getElementById('nuevo-regla').value = '';
+};
+
+window.editarRegla = async (id, nuevoTexto) => {
+    if (!obtenerAcceso()) return;
+    // Quitamos el "• " del inicio si el usuario lo dejó
+    const limpio = nuevoTexto.replace('• ', '').trim();
+    if (limpio) await set(ref(db, `reglamento/${id}`), limpio);
+};
+
+window.borrarRegla = async (id) => {
+    if (obtenerAcceso() && confirm("¿Borrar esta regla?")) {
+        await set(ref(db, `reglamento/${id}`), null);
+    }
+};
     </script>
 </body>
 </html>
