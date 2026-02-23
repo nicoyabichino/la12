@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La 12 - Gestión de Faltas</title>
+    <title>La 12 - Tabla de puntos</title>
     <style>
         :root { --oro: #ffcc00; --fondo: #1a1a1a; }
         body { 
             font-family: 'Segoe UI', sans-serif; 
-            /* Referencia a tu imagen en la carpeta public */
-            background: url('public/images/la12+zamo.jpeg') no-repeat center center fixed; 
+            background: url('public/images/la12.jpeg') no-repeat center center fixed; 
             background-size: cover;
             color: white; margin: 0; padding: 20px;
         }
-        /* Capa oscura para que se lea el texto sobre el fondo */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75); z-index: -1;
+            background: rgba(0,0,0,0.8); z-index: -1;
         }
         .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; background: #333; color: white; transition: 0.3s; }
@@ -29,17 +27,17 @@
         th, td { padding: 12px; border-bottom: 1px solid #444; text-align: center; }
         th { color: var(--oro); background: rgba(0,0,0,0.3); }
 
-        .form-agregar { display: flex; gap: 10px; margin-top: 30px; justify-content: center; flex-wrap: wrap; border-top: 1px solid #555; padding-top: 20px; }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; }
+        .controles { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; margin: 5px; }
         
-        .historial-item { border-left: 4px solid var(--oro); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.05); text-align: left; border-radius: 0 8px 8px 0; }
-        .fecha { font-size: 0.75em; color: var(--oro); margin-bottom: 5px; font-weight: bold; }
-        .comentario { color: #ddd; font-style: italic; margin-top: 5px; display: block; }
+        .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; }
+        .fecha { font-size: 0.75em; color: var(--oro); font-weight: bold; }
+        .cambio-valor { font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>🏆 La 12 - Panel de Control</h1>
+    <h1>🏆 La 12 - Gestión de Faltas</h1>
 
     <div class="nav">
         <button onclick="ver('tabla')" id="btn-tabla" class="active">Tabla</button>
@@ -47,62 +45,69 @@
         <button onclick="ver('reglamento')" id="btn-reglamento">Reglamento</button>
     </div>
 
-    <div class="controles" style="text-align: center; margin-bottom: 15px;">
-        <input type="password" id="password" placeholder="Clave del Dios de la Tabla">
+    <div class="controles">
+        <input type="password" id="password" placeholder="Clave del Dios">
+        <button onclick="validarYGuardarClave()" style="background: #444;">Acceder</button>
+        <p id="status-clave" style="font-size: 0.8em; margin-top: 5px; color: #aaa;">Clave requerida para editar.</p>
     </div>
 
     <div id="tabla" class="seccion active-section">
         <table>
-            <thead>
-                <tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr>
-            </thead>
+            <thead><tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr></thead>
             <tbody id="tabla-cuerpo"></tbody>
         </table>
-
-        <div class="form-agregar">
-            <input type="text" id="nuevo-nombre" placeholder="Nombre del nuevo Therian">
-            <button onclick="agregarJugador()" style="background: var(--oro); color: black;">+ Agregar a la lista</button>
+        <div style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
+            <input type="text" id="nuevo-nombre" placeholder="Nombre nuevo">
+            <button onclick="agregarJugador()" style="background: var(--oro); color: black;">Agregar nuevo Therian</button>
         </div>
     </div>
 
     <div id="historial" class="seccion">
-        <h3>📜 Registro de Infracciones</h3>
+        <input type="text" id="filtro-historial" placeholder="Filtrar por nombre..." onkeyup="renderHistorial()" style="width: 90%; margin-bottom: 15px;">
         <div id="lista-historial"></div>
     </div>
 
     <div id="reglamento" class="seccion">
-        <h3>⚖️ Reglamento de Multas</h3>
-        <ul style="text-align: left; line-height: 2; font-size: 1.1em;">
-            <li>🚫 <b>Faltar sin avisar:</b> 10 puntos</li>
-            <li>⏳ <b>Llegar tarde (>20min):</b> 5 puntos</li>
-            <li>🎂 <b>Faltar por cumple:</b> 15 puntos (Imperdonable)</li>
-            <li>⚽ <b>No traer la pelota (si te toca):</b> 3 puntos</li>
-            <li>🍻 <b>No quedarse al tercer tiempo:</b> 2 puntos</li>
+        <h3>⚖️ Reglamento</h3>
+        <ul style="text-align: left; line-height: 2;">
+            <li>🚫 Faltar sin avisar: 10 pts</li>
+            <li>⏳ Llegar tarde: 5 pts</li>
+            <li>🎂 Faltar por cumple: 15 pts</li>
         </ul>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // ==========================================
-        // COPIÁ TUS DATOS DE FIREBASE ACÁ ABAJO:
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCLa7nhMTqvOV5QuQdsfmKAGKHvjv4aEfI",
-            authDomain: "tabla-la12.firebaseapp.com",
             databaseURL: "https://tabla-la12-default-rtdb.firebaseio.com",
             projectId: "tabla-la12",
-            storageBucket: "tabla-la12.firebasestorage.app",
-            messagingSenderId: "614852547098",
             appId: "1:614852547098:web:3298faf37fe28d965df7a3"
         };
-        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const CLAVE_MAESTRA = "ladoce2026"; // <--- CAMBIALA ACÁ
+        let cacheHistorial = [];
 
-        // NAVEGACIÓN ENTRE PESTAÑAS
+        // --- SISTEMA DE CLAVE ---
+        window.validarYGuardarClave = () => {
+            const input = document.getElementById('password').value;
+            const status = document.getElementById('status-clave');
+            if(input === CLAVE_MAESTRA) {
+                localStorage.setItem('la12_clave', input);
+                status.innerText = "✅ Clave correcta. Ya podés editar.";
+                status.style.color = "#44ff44";
+            } else {
+                alert("Clave incorrecta!");
+            }
+        };
+
+        const obtenerClave = () => localStorage.getItem('la12_clave');
+
+        // --- NAVEGACIÓN ---
         window.ver = (id) => {
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active-section'));
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
@@ -110,94 +115,88 @@
             document.getElementById('btn-' + id).classList.add('active');
         };
 
-        // RENDER TABLA DE JUGADORES
+        // --- TABLA ---
         onValue(ref(db, 'jugadores'), (snap) => {
             const data = snap.val();
             const tabla = document.getElementById('tabla-cuerpo');
-            if(!tabla) return;
             tabla.innerHTML = '';
             const lista = [];
             for (let id in data) lista.push({id, ...data[id]});
-            
-            // Ordenar: Mas puntos (más faltas) primero
             lista.sort((a,b) => b.puntos - a.puntos);
-            
             lista.forEach(j => {
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
                     <td><b>${j.nombre}</b></td>
                     <td contenteditable="true" onblur="modificar('${j.id}', 'puntos', this.innerText, ${j.puntos}, '${j.nombre}')">${j.puntos}</td>
-                    <td contenteditable="true" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>
-                `;
+                    <td contenteditable="true" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>`;
                 tabla.appendChild(fila);
             });
         });
 
-        // RENDER HISTORIAL
+        // --- HISTORIAL ---
         onValue(ref(db, 'historial'), (snap) => {
-            const data = snap.val();
+            cacheHistorial = snap.val() ? Object.values(snap.val()).reverse() : [];
+            renderHistorial();
+        });
+
+        window.renderHistorial = () => {
+            const filtro = document.getElementById('filtro-historial').value.toLowerCase();
             const div = document.getElementById('lista-historial');
-            if(!div) return;
             div.innerHTML = '';
-            if(!data) { div.innerHTML = "<p>No hay registros todavía.</p>"; return; }
-            
-            const items = Object.values(data).reverse(); 
-            items.forEach(h => {
-                const color = h.cambio > 0 ? "#ff4444" : "#44ff44"; // Rojo si suma puntos (mala noticia)
+            cacheHistorial.filter(h => h.jugadorNombre.toLowerCase().includes(filtro)).forEach(h => {
+                const color = h.diff > 0 ? "#ff4444" : "#44ff44";
                 div.innerHTML += `
                     <div class="historial-item">
                         <div class="fecha">${h.fecha}</div>
-                        <span><b>${h.jugadorNombre}</b>: <span style="color:${color}">${h.cambio > 0 ? '+'+h.cambio : h.cambio} ${h.campo}</span></span>
-                        <span class="comentario">"${h.comentario}"</span>
+                        <b>${h.jugadorNombre}</b>: <span style="color:${color}">${h.diff > 0 ? '+'+h.diff : h.diff} ${h.campo}</span> 
+                        <span style="font-size:0.8em; color:#aaa;">(Antes: ${h.antes} - Ahora: ${h.ahora})</span>
+                        <div style="font-style:italic; margin-top:5px;">"${h.comentario}"</div>
                     </div>`;
             });
-        });
+        };
 
-        // MODIFICAR Y GENERAR HISTORIAL
+        // --- LÓGICA DE EDICIÓN ---
         window.modificar = async (id, campo, nuevoValor, viejoValor, nombreReal) => {
-            const pass = document.getElementById('password').value;
-            if (pass !== "ladoce2026") { // CAMBIÁ TU CLAVE ACÁ
-                alert("¡Clave incorrecta Papi! jajode!");
-                location.reload(); 
-                return; 
+            if (obtenerClave() !== CLAVE_MAESTRA) {
+                alert("No te olvides la clave mi rrray.");
+                location.reload(); return;
             }
-            
             const num = parseInt(nuevoValor);
             if (isNaN(num) || num === viejoValor) return;
 
-            const comentario = prompt(`¿Por qué el cambio para ${nombreReal}?`);
-            if (comentario === null) { location.reload(); return; } // Si cancela el prompt
+            const comentario = prompt(`Motivo para ${nombreReal}:`);
+            if (!comentario) { location.reload(); return; }
 
-            // 1. Actualizar DB
             await update(ref(db, `jugadores/${id}`), { [campo]: num });
-
-            // 2. Crear entrada en historial
             const nuevoHRef = push(ref(db, 'historial'));
             await set(nuevoHRef, {
                 jugadorNombre: nombreReal,
                 campo: campo,
-                cambio: num - viejoValor,
-                comentario: comentario || "Sin motivo especificado",
+                antes: viejoValor,
+                ahora: num,
+                diff: num - viejoValor,
+                comentario: comentario,
                 fecha: new Date().toLocaleString('es-AR')
             });
         };
 
-        // AGREGAR JUGADOR NUEVO
         window.agregarJugador = async () => {
-            const pass = document.getElementById('password').value;
+            if (obtenerClave() !== CLAVE_MAESTRA) { alert("Clave!"); return; }
             const nombre = document.getElementById('nuevo-nombre').value;
-            if (pass !== "ladoce2026") { alert("Clave mal para agregar!"); return; }
             if (!nombre) return;
-
             const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
-            await set(ref(db, `jugadores/${id}`), {
-                nombre: nombre,
-                puntos: 0,
-                asistencias: 0
-            });
+            await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
             document.getElementById('nuevo-nombre').value = '';
-            alert(`${nombre} fue agregado a la lista de deudores.`);
         };
+
+        // Auto-completar password si ya existe en localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const guardada = obtenerClave();
+            if(guardada) {
+                document.getElementById('password').value = guardada;
+                validarYGuardarClave();
+            }
+        });
     </script>
 </body>
 </html>
