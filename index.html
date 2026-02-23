@@ -203,6 +203,13 @@ window.agregarJugador = async () => {
     await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
     document.getElementById('nuevo-nombre').value = '';
 };
+    // Si ya estaba logueado al recargar, habilitar botones
+if (obtenerAcceso()) {
+    document.getElementById('nuevo-nombre').disabled = false;
+    document.getElementById('btn-agregar').disabled = false;
+    document.getElementById('btn-agregar').style.opacity = "1";
+    document.getElementById('btn-agregar').style.cursor = "pointer";
+}
     </script>
 </body>
 </html>
