@@ -49,6 +49,47 @@
 
         .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; text-align: left; }
         .fecha { font-size: 0.75em; color: var(--oro); font-weight: bold; }
+        /* Estilos de la Card de Evento */
+.event-card {
+    background: rgba(40, 40, 40, 0.95);
+    border: 2px solid var(--oro);
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.event-card-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 15px; }
+.event-card-header h2 { font-size: 2em; color: var(--oro); margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+
+.badge { background: #444; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; color: var(--oro); display: inline-block; margin-top: 5px; }
+
+.event-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+
+.btn-puntos, .btn-subir { 
+    background: #333; color: white; border: 1px solid #555; padding: 10px 15px; 
+    border-radius: 8px; font-size: 0.9em; cursor: pointer; transition: 0.3s;
+}
+.btn-puntos:hover { background: var(--oro); color: black; }
+.btn-subir { background: #28a745; border: none; } /* Verde para resaltar subida */
+
+/* Galería tipo Instagram/Pinterest */
+.galeria-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 8px; 
+}
+.galeria-grid img { 
+    width: 100%; height: 100px; object-fit: cover; 
+    border-radius: 6px; border: 1px solid #333; 
+    transition: transform 0.2s; cursor: pointer;
+}
+.galeria-grid img:hover { transform: scale(1.05); z-index: 2; }
+
+.btn-eliminar { width: 100%; background: none; color: #ff4444; border: 1px dashed #ff4444; margin-top: 20px; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -103,19 +144,27 @@
             <div id="dias-reducidos" class="cal-grid"></div>
         </div>
 
-        <div id="visor-evento" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
-            <h4 id="titulo-evento-sel"></h4>
-            <button id="btn-ver-historial-ev" style="font-size:0.8em; background:var(--oro); color:black;">Ver Puntos de este día</button>
-            
-            <div style="margin-top:15px;">
-                <label style="cursor:pointer; background:#444; padding:8px; border-radius:5px; display:inline-block;">
-                    📸 Subir Foto del Celu
-                    <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
-                </label>
-            </div>
-            <div id="galeria-fotos" class="galeria"></div>
-            <button id="btn-borrar-ev" onclick="borrarEventoActual()" style="display:none; color:red; background:none; border:none; margin-top:15px; cursor:pointer;">Eliminar Evento</button>
-        </div>
+     <div id="visor-evento" class="event-card" style="display:none;">
+    <div class="event-card-header">
+        <h2 id="titulo-evento-sel"></h2>
+        <span id="fecha-badge" class="badge"></span>
+    </div>
+    
+    <div class="event-actions">
+        <button id="btn-ver-historial-ev" class="btn-puntos">📊 Ver Puntos de este día</button>
+        <label class="btn-subir">
+            📸 Subir a la Galería
+            <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
+        </label>
+    </div>
+
+    <div class="galeria-container">
+        <p style="font-size: 0.8em; color: #aaa; margin-bottom: 10px;">Galería de la juntada:</p>
+        <div id="galeria-fotos" class="galeria-grid"></div>
+    </div>
+
+    <button id="btn-borrar-ev" onclick="borrarEventoActual()" class="btn-eliminar" style="display:none;">Eliminar Juntada</button>
+</div>
 
         <div id="controles-eventos" style="display:none; border-top:1px solid #444; margin-top:15px; padding-top:10px;">
             <input type="text" id="nombre-evento" placeholder="Nombre de la juntada" style="width:55%">
@@ -300,24 +349,29 @@
             renderCalendario();
         });
 
-        window.verEvento = (fechaStr) => {
-            const ev = eventosCache[fechaStr];
-            const visor = document.getElementById('visor-evento');
-            if(!ev) { visor.style.display = 'none'; return; }
-            
-            eventoSeleccionadoId = ev.id;
-            visor.style.display = 'block';
-            document.getElementById('titulo-evento-sel').innerText = ev.nombre;
-            const fLoc = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR');
-            document.getElementById('btn-ver-historial-ev').onclick = () => {
-                document.getElementById('filtro-historial').value = fLoc;
-                renderHistorial();
-                ver('historial');
-            };
-            
-            document.getElementById('btn-borrar-ev').style.display = obtenerAcceso() ? 'block' : 'none';
-            cargarFotos(ev.id);
-        };
+window.verEvento = (fechaStr) => {
+    const ev = eventosCache[fechaStr];
+    const visor = document.getElementById('visor-evento');
+    if(!ev) { visor.style.display = 'none'; return; }
+    
+    eventoSeleccionadoId = ev.id;
+    visor.style.display = 'block';
+    
+    // Título y Fecha
+    document.getElementById('titulo-evento-sel').innerText = ev.nombre;
+    const fLoc = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+    document.getElementById('fecha-badge').innerText = fLoc; // Seteamos el badge
+    
+    document.getElementById('btn-ver-historial-ev').onclick = () => {
+        const fechaFiltro = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR');
+        document.getElementById('filtro-historial').value = fechaFiltro;
+        renderHistorial();
+        ver('historial');
+    };
+    
+    document.getElementById('btn-borrar-ev').style.display = obtenerAcceso() ? 'block' : 'none';
+    cargarFotos(ev.id);
+};
 
 // Buscá esta parte y reemplazala:
 window.crearEvento = async () => {
