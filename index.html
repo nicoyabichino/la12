@@ -33,8 +33,15 @@
         /* Estilos Calendario */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .dia { padding: 10px 0; border-radius: 5px; cursor: pointer; font-size: 0.9em; background: rgba(255,255,255,0.05); }
-        .dia:hover { background: rgba(255,255,255,0.2); }
+       .dia { 
+    padding: 15px 0; /* Más espacio para tocar con el dedo */
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 1em; 
+    background: rgba(255,255,255,0.05); 
+    transition: 0.2s;
+}
+.dia:active { transform: scale(0.9); } /* Efecto de click */
         .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
         
         .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
@@ -312,12 +319,23 @@
             cargarFotos(ev.id);
         };
 
-        window.crearEvento = async () => {
-            const n = document.getElementById('nombre-evento').value;
-            const f = document.getElementById('fecha-evento').value;
-            if(n && f && obtenerAcceso()) await push(ref(db, 'eventos'), { nombre: n, fecha: f });
-        };
+// Buscá esta parte y reemplazala:
+window.crearEvento = async () => {
+    const inputNombre = document.getElementById('nombre-evento');
+    const inputFecha = document.getElementById('fecha-evento');
+    const n = inputNombre.value;
+    const f = inputFecha.value;
 
+    if(n && f && obtenerAcceso()) {
+        await push(ref(db, 'eventos'), { nombre: n, fecha: f });
+        // Limpiamos los campos después de crear para que no se dupliquen
+        inputNombre.value = '';
+        inputFecha.value = '';
+        alert("✅ Evento agendado!");
+    } else {
+        alert("Falta el nombre, la fecha o poner la clave rray.");
+    }
+};
         window.borrarEventoActual = async () => {
             if(confirm("¿Borrar juntada?") && obtenerAcceso()) {
                 await set(ref(db, `eventos/${eventoSeleccionadoId}`), null);
