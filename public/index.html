@@ -35,65 +35,76 @@
             </tbody>
     </table>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<script type="module">
+    // Estos links ya vienen listos para que el navegador los entienda sin instalar nada
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 1. REEMPLAZA ESTO CON TUS DATOS DE CONFIGURACIÓN
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            databaseURL: "https://tabla-la12-default-rtdb.firebaseio.com",
-            projectId: "tabla-la12",
-            appId: "TU_APP_ID"
-        };
+    // ACÁ PEGUÉ TU CONFIGURACIÓN REAL
+    const firebaseConfig = {
+        apiKey: "AIzaSyCLa7nhMTqvOV5QuQdsfmKAGKHvjv4aEfI",
+        authDomain: "tabla-la12.firebaseapp.com",
+        databaseURL: "https://tabla-la12-default-rtdb.firebaseio.com",
+        projectId: "tabla-la12",
+        storageBucket: "tabla-la12.firebasestorage.app",
+        messagingSenderId: "614852547098",
+        appId: "1:614852547098:web:3298faf37fe28d965df7a3",
+        measurementId: "G-DBB7RFZRFK"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const jugadoresRef = ref(db, 'jugadores');
+    // Inicializamos Firebase y la Base de Datos
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const jugadoresRef = ref(db, 'jugadores');
 
-        // 2. ESCUCHAR CAMBIOS (Tiempo Real)
-        onValue(jugadoresRef, (snapshot) => {
-            const data = snapshot.val();
-            const tablaCuerpo = document.getElementById('tabla-cuerpo');
-            tablaCuerpo.innerHTML = '';
-            
-            const jugadores = [];
-            for (let id in data) { jugadores.push({ id, ...data[id] }); }
+    // 2. ESCUCHAR CAMBIOS EN TIEMPO REAL
+    onValue(jugadoresRef, (snapshot) => {
+        const data = snapshot.val();
+        const tablaCuerpo = document.getElementById('tabla-cuerpo');
+        if (!tablaCuerpo) return;
+        
+        tablaCuerpo.innerHTML = '';
+        
+        const jugadores = [];
+        for (let id in data) { 
+            jugadores.push({ id, ...data[id] }); 
+        }
 
-            // Ordenamos por puntos (el que más falta tiene, arriba)
-            jugadores.sort((a, b) => b.puntos - a.puntos);
+        // Ordenamos: más puntos (faltas) arriba
+        jugadores.sort((a, b) => b.puntos - a.puntos);
 
-            jugadores.forEach(j => {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td>${j.nombre}</td>
-                    <td contenteditable="true" onblur="guardar('${j.id}', 'puntos', this.innerText)">${j.puntos}</td>
-                    <td contenteditable="true" onblur="guardar('${j.id}', 'asistencias', this.innerText)">${j.asistencias}</td>
-                `;
-                tablaCuerpo.appendChild(fila);
-            });
+        jugadores.forEach(j => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>${j.nombre}</td>
+                <td contenteditable="true" onblur="guardar('${j.id}', 'puntos', this.innerText)">${j.puntos}</td>
+                <td contenteditable="true" onblur="guardar('${j.id}', 'asistencias', this.innerText)">${j.asistencias}</td>
+            `;
+            tablaCuerpo.appendChild(fila);
         });
+    });
 
-        // 3. GUARDAR CAMBIOS
-        window.guardar = async (id, campo, valor) => {
-            const pass = document.getElementById('password').value;
-            
-            // Poné la clave que vos quieras acá:
-            if (pass !== "nico123") { 
-                alert("¡Clave incorrecta Papi! jajode!");
-                return;
-            }
+    // 3. FUNCIÓN PARA GUARDAR (La clave es 'nico123', cambiala si querés)
+    window.guardar = async (id, campo, valor) => {
+        const pass = document.getElementById('password').value;
+        
+        if (pass !== "ladoce2026") { 
+            alert("¡Clave incorrecta Papi! jajode!");
+            // Recargamos para que el número vuelva a su valor original en la pantalla
+            location.reload(); 
+            return;
+        }
 
-            const num = parseInt(valor);
-            if (isNaN(num)) return;
+        const num = parseInt(valor);
+        if (isNaN(num)) return;
 
-            try {
-                await update(ref(db, `jugadores/${id}`), { [campo]: num });
-                console.log("Puntos actualizados para " + id);
-            } catch (e) {
-                alert("Error al guardar: " + e.message);
-            }
-        };
-    </script>
+        try {
+            await update(ref(db, `jugadores/${id}`), { [campo]: num });
+            console.log("Actualizado!");
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
+</script>
 </body>
 </html>
