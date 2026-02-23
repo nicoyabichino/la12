@@ -89,23 +89,37 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const CLAVE_MAESTRA = "ladoce2026"; // <--- CAMBIALA ACÁ
+        const CLAVE_MAESTRA = "la12"; // <--- CAMBIALA ACÁ
         let cacheHistorial = [];
 
         // --- SISTEMA DE CLAVE ---
-        window.validarYGuardarClave = () => {
-            const input = document.getElementById('password').value;
-            const status = document.getElementById('status-clave');
-            if(input === CLAVE_MAESTRA) {
-                localStorage.setItem('la12_clave', input);
-                status.innerText = "✅ Clave correcta. Ya podés editar.";
-                status.style.color = "#44ff44";
-            } else {
-                alert("Clave incorrecta!");
-            }
-        };
+// Este código representa "ladoce2026" pero nadie puede saber qué es a simple vista
+const HASH_MAESTRO = "1363654034"; 
 
-        const obtenerClave = () => localStorage.getItem('la12_clave');
+// Función simple para ocultar la clave
+const generarHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return hash.toString();
+};
+
+window.validarYGuardarClave = () => {
+    const input = document.getElementById('password').value;
+    const status = document.getElementById('status-clave');
+    
+    if(generarHash(input) === HASH_MAESTRO) {
+        localStorage.setItem('la12_clave_hash', generarHash(input));
+        status.innerText = "✅ Clave correcta. Ya podés editar.";
+        status.style.color = "#44ff44";
+    } else {
+        alert("¡Clave incorrecta Papi! jajode!.");
+    }
+};
+
+const obtenerAcceso = () => localStorage.getItem('la12_clave_hash') === HASH_MAESTRO;
 
         // --- NAVEGACIÓN ---
         window.ver = (id) => {
@@ -157,10 +171,10 @@
 
         // --- LÓGICA DE EDICIÓN ---
         window.modificar = async (id, campo, nuevoValor, viejoValor, nombreReal) => {
-            if (obtenerClave() !== CLAVE_MAESTRA) {
-                alert("No te olvides la clave mi rrray.");
-                location.reload(); return;
-            }
+         if (!obtenerAcceso()) {
+    alert("No te olvides la clave mi rrray.");
+    location.reload(); return;
+}
             const num = parseInt(nuevoValor);
             if (isNaN(num) || num === viejoValor) return;
 
@@ -181,7 +195,7 @@
         };
 
         window.agregarJugador = async () => {
-            if (obtenerClave() !== CLAVE_MAESTRA) { alert("Clave!"); return; }
+            if (!obtenerAcceso()) { alert("Clave!"); return; }
             const nombre = document.getElementById('nuevo-nombre').value;
             if (!nombre) return;
             const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
@@ -189,14 +203,6 @@
             document.getElementById('nuevo-nombre').value = '';
         };
 
-        // Auto-completar password si ya existe en localStorage
-        document.addEventListener('DOMContentLoaded', () => {
-            const guardada = obtenerClave();
-            if(guardada) {
-                document.getElementById('password').value = guardada;
-                validarYGuardarClave();
-            }
-        });
     </script>
 </body>
 </html>
