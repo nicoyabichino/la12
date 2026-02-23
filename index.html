@@ -56,10 +56,10 @@
             <thead><tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr></thead>
             <tbody id="tabla-cuerpo"></tbody>
         </table>
-        <div style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
-            <input type="text" id="nuevo-nombre" placeholder="Nombre nuevo">
-            <button onclick="agregarJugador()" style="background: var(--oro); color: black;">Agregar nuevo Therian</button>
-        </div>
+     <div id="controles-admin" style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
+    <input type="text" id="nuevo-nombre" placeholder="Nombre nuevo" disabled>
+    <button id="btn-agregar" onclick="agregarJugador()" style="background: var(--oro); color: black; opacity: 0.5; cursor: not-allowed;" disabled>Agregar nuevo Therian</button>
+</div>
     </div>
 
     <div id="historial" class="seccion">
@@ -104,6 +104,10 @@
                 status.innerText = "✅ Eso mi rrey. Ya podés editar.";
                 status.style.color = "#44ff44";
                 document.getElementById('password').value = ""; // Limpiamos el input
+                document.getElementById('nuevo-nombre').disabled = false;
+        document.getElementById('btn-agregar').disabled = false;
+        document.getElementById('btn-agregar').style.opacity = "1";
+        document.getElementById('btn-agregar').style.cursor = "pointer";
             } else {
                 alert("¡Clave incorrecta Papi! jajode!.");
             }
@@ -186,14 +190,19 @@
             });
         };
 
-        window.agregarJugador = async () => {
-            if (!obtenerAcceso()) { alert("¡Clave!"); return; }
-            const nombre = document.getElementById('nuevo-nombre').value;
-            if (!nombre) return;
-            const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
-            await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
-            document.getElementById('nuevo-nombre').value = '';
-        };
+window.agregarJugador = async () => {
+    // Si algún vivo intenta llamar a la función por consola, esto lo frena
+    if (!obtenerAcceso()) { 
+        alert("¡No tenés permiso, rray!"); 
+        return; 
+    }
+    
+    const nombre = document.getElementById('nuevo-nombre').value;
+    if (!nombre) return;
+    const id = nombre.toLowerCase().trim().replace(/\s/g, '_');
+    await set(ref(db, `jugadores/${id}`), { nombre, puntos: 0, asistencias: 0 });
+    document.getElementById('nuevo-nombre').value = '';
+};
     </script>
 </body>
 </html>
