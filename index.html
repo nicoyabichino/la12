@@ -198,6 +198,18 @@
             📸 Subir a la Galería
             <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
         </label>
+        <div class="event-actions">
+    <button id="btn-ver-historial-ev" class="btn-puntos">📊 Ver Puntos</button>
+    
+    <button id="btn-google-cal" class="btn-puntos" style="background: #4285F4; color: white; border: none;">
+        📅 Agendar en Google
+    </button>
+
+    <label class="btn-subir">
+        📸 Subir Foto
+        <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
+    </label>
+</div>
     </div>
 
     <div class="galeria-container">
@@ -562,11 +574,21 @@ window.verEvento = (fechaStr) => {
     eventoSeleccionadoId = ev.id;
     visor.style.display = 'block';
     
-    // Título y Fecha
     document.getElementById('titulo-evento-sel').innerText = ev.nombre;
     const fLoc = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-    document.getElementById('fecha-badge').innerText = fLoc; // Seteamos el badge
+    document.getElementById('fecha-badge').innerText = fLoc;
+
+    // --- LÓGICA LINK GOOGLE CALENDAR ---
+    const btnGoogle = document.getElementById('btn-google-cal');
+    const fechaLimpia = fechaStr.replace(/-/g, ''); // Formato YYYYMMDD
+    const tituloURL = encodeURIComponent("Juntada La 12: " + ev.nombre);
     
+    // Creamos el link (Evento de todo el día)
+    const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${tituloURL}&dates=${fechaLimpia}/${fechaLimpia}&details=Agendado+desde+la+App+de+La+12&sf=true&output=xml`;
+    
+    btnGoogle.onclick = () => window.open(googleUrl, '_blank');
+    // -----------------------------------
+
     document.getElementById('btn-ver-historial-ev').onclick = () => {
         const fechaFiltro = new Date(fechaStr + "T00:00:00").toLocaleDateString('es-AR');
         document.getElementById('filtro-historial').value = fechaFiltro;
