@@ -186,39 +186,32 @@
             <div id="dias-reducidos" class="cal-grid"></div>
         </div>
 
-     <div id="visor-evento" class="event-card" style="display:none;">
-    <div class="event-card-header">
-        <h2 id="titulo-evento-sel"></h2>
-        <span id="fecha-badge" class="badge"></span>
-    </div>
-    
-    <div class="event-actions">
-        <button id="btn-ver-historial-ev" class="btn-puntos">📊 Ver Puntos de este día</button>
-        <label class="btn-subir">
-            📸 Subir a la Galería
-            <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
-        </label>
+<div id="visor-evento" class="event-card" style="display:none;">
+        <div class="event-card-header">
+            <h2 id="titulo-evento-sel"></h2>
+            <span id="fecha-badge" class="badge"></span>
+        </div>
+        
         <div class="event-actions">
-    <button id="btn-ver-historial-ev" class="btn-puntos">📊 Ver Puntos</button>
-    
-    <button id="btn-google-cal" class="btn-puntos" style="background: #4285F4; color: white; border: none;">
-        📅 Agendar en Google
-    </button>
+            <button id="btn-ver-historial-ev" class="btn-puntos">📊 Ver Puntos</button>
+            
+            <button id="btn-google-cal" class="btn-puntos" style="background: #4285F4; color: white; border: none;">
+                📅 Agendar en Google
+            </button>
 
-    <label class="btn-subir">
-        📸 Subir Foto
-        <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
-    </label>
-</div>
+            <label class="btn-subir">
+                📸 Subir Foto
+                <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="subirFotoDirecta()">
+            </label>
+        </div>
+
+        <div class="galeria-container">
+            <p style="font-size: 0.8em; color: #aaa; margin-bottom: 10px;">Galería de la juntada:</p>
+            <div id="galeria-fotos" class="galeria-grid"></div>
+        </div>
+
+        <button id="btn-borrar-ev" onclick="borrarEventoActual()" class="btn-eliminar" style="display:none;">Eliminar Juntada</button>
     </div>
-
-    <div class="galeria-container">
-        <p style="font-size: 0.8em; color: #aaa; margin-bottom: 10px;">Galería de la juntada:</p>
-        <div id="galeria-fotos" class="galeria-grid"></div>
-    </div>
-
-    <button id="btn-borrar-ev" onclick="borrarEventoActual()" class="btn-eliminar" style="display:none;">Eliminar Juntada</button>
-</div>
 
         <div id="controles-eventos" style="display:none; border-top:1px solid #444; margin-top:15px; padding-top:10px;">
             <input type="text" id="nombre-evento" placeholder="Nombre de la juntada" style="width:55%">
