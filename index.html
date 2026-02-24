@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La 12 - Gestión de Puntos</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         :root { --oro: #ffcc00; --fondo: #1a1a1a; }
         body { 
@@ -318,33 +319,55 @@
         };
 
         // --- REGLAMENTO ---
-// --- LÓGICA DE REGLAMENTO ---
+// --- LÓGICA DE REGLAMENTO CON DRAG & DROP ---
+let reglasCache = [];
+
 onValue(ref(db, 'reglamento'), (snap) => {
     const data = snap.val();
     const div = document.getElementById('lista-reglamento');
     div.innerHTML = '';
     if (!data) return;
 
-    // Convertimos a array y ordenamos por el campo 'orden'
-    const reglas = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-    reglas.sort((a, b) => a.orden - b.orden);
+    reglasCache = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+    reglasCache.sort((a, b) => a.orden - b.orden);
 
-    reglas.forEach((regla, index) => {
+    reglasCache.forEach((regla, index) => {
         const esAdmin = obtenerAcceso();
         div.innerHTML += `
-            <div class="regla-item" style="display:flex; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:8px; padding:12px; border-radius:8px; border-left: 3px solid var(--oro);">
+            <div class="regla-item" data-id="${regla.id}" style="display:flex; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:8px; padding:12px; border-radius:8px; border-left: 3px solid var(--oro);">
                 <div style="flex-grow:1;">
-                    <span style="color:var(--oro); font-weight:bold; margin-right:8px;">${index + 1}.</span> 
+                    <span class="indice-regla" style="color:var(--oro); font-weight:bold; margin-right:8px;">${index + 1}.</span> 
                     <span ${esAdmin ? `contenteditable="true" onblur="actualizarRegla('${regla.id}', 'texto', this.innerText)"` : ''} style="outline:none;">${regla.texto}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="background:rgba(255,204,0,0.2); color:var(--oro); padding:2px 8px; border-radius:5px; font-weight:bold;">
                         +<span ${esAdmin ? `contenteditable="true" onblur="actualizarRegla('${regla.id}', 'puntos', this.innerText)"` : ''}>${regla.puntos}</span>
                     </span>
-                    ${esAdmin ? `<button onclick="borrarRegla('${regla.id}')" style="color:#ff4444; background:none; border:none; cursor:pointer; font-size:1.2em;">✕</button>` : ''}
+                    ${esAdmin ? `
+                        <button onclick="borrarRegla('${regla.id}')" style="color:#ff4444; background:none; border:none; cursor:pointer; font-size:1.2em;">✕</button>
+                        <div class="handle" style="cursor:grab; font-size:1.5em; color:var(--oro); margin-left:5px; padding:0 5px;">☰</div>
+                    ` : ''}
                 </div>
             </div>`;
     });
+
+    // Si es admin, activamos el poder de mover
+    if (obtenerAcceso()) {
+        Sortable.create(div, {
+            handle: '.handle', // Solo se mueve si tocan las tres rayitas
+            animation: 150,
+            onEnd: async () => {
+                const items = div.querySelectorAll('.regla-item');
+                const updates = {};
+                items.forEach((el, index) => {
+                    const id = el.getAttribute('data-id');
+                    updates[`reglamento/${id}/orden`] = index;
+                });
+                await update(ref(db), updates);
+                // No hace falta alert, Firebase actualiza solo el resto
+            }
+        });
+    }
 });
 
 window.agregarReglaNueva = async () => {
@@ -352,10 +375,11 @@ window.agregarReglaNueva = async () => {
     const pts = document.getElementById('nuevo-regla-pts').value || 0;
     
     if (txt && obtenerAcceso()) {
+        const nuevoOrden = reglasCache.length > 0 ? reglasCache[reglasCache.length - 1].orden + 1 : 0;
         await push(ref(db, 'reglamento'), { 
             texto: txt, 
             puntos: parseInt(pts), 
-            orden: Date.now() // Esto asegura que la nueva vaya al final
+            orden: nuevoOrden 
         });
         document.getElementById('nuevo-regla-txt').value = '';
         document.getElementById('nuevo-regla-pts').value = '';
