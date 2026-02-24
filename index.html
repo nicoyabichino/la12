@@ -294,31 +294,98 @@ lista.sort((a, b) => {
     }
     return a.asistencias - b.asistencias; // Luego por asistencias (ascendente)
 });
-            lista.forEach(j => {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td><b>${j.nombre}</b></td>
-                    <td contenteditable="${obtenerAcceso()}" onblur="modificar('${j.id}', 'puntos', this.innerText, ${j.puntos}, '${j.nombre}')">${j.puntos}</td>
-                    <td contenteditable="${obtenerAcceso()}" onblur="modificar('${j.id}', 'asistencias', this.innerText, ${j.asistencias}, '${j.nombre}')">${j.asistencias}</td>`;
-                tabla.appendChild(fila);
-            });
+lista.forEach(j => {
+    const fila = document.createElement('tr');
+    const esAdmin = obtenerAcceso();
+    fila.innerHTML = `
+        <td><b>${j.nombre}</b></td>
+        <td>
+            <input type="number" value="${j.puntos}" 
+                ${esAdmin ? '' : 'disabled'} 
+                id="pts-${j.id}" 
+                style="width:50px; background:none; color:white; border:none; text-align:center;">
+        </td>
+        <td>
+            <input type="number" value="${j.asistencias}" 
+                ${esAdmin ? '' : 'disabled'} 
+                id="asi-${j.id}" 
+                style="width:50px; background:none; color:white; border:none; text-align:center;">
+        </td>
+        ${esAdmin ? `<td><button onclick="guardarCambiosFila('${j.id}', '${j.nombre}', ${j.puntos}, ${j.asistencias})" style="padding:5px; font-size:0.8em;">💾</button></td>` : ''}
+    `;
+    tabla.appendChild(fila);
+});
         });
 
-        window.modificar = async (id, campo, nuevoVal, viejoVal, nombre) => {
-            const num = parseInt(nuevoVal);
-            if (isNaN(num) || num === viejoVal) return;
-            if (!obtenerAcceso()) { alert("Sin clave!"); location.reload(); return; }
+window.modificar = async (id, campo, nuevoVal, viejoVal, nombre) => {
+    const num = parseInt(nuevoVal);
+    
+    // Si no es un número o es igual al anterior, no hacemos nada
+    if (isNaN(num) || num === viejoVal) return;
+    
+    // Si no tiene permiso, recargamos
+    if (!obtenerAcceso()) { 
+        alert("Sin clave!"); 
+        location.reload(); 
+        return; 
+    }
 
-            const motivo = prompt(`Motivo para ${nombre}:`);
-            if (!motivo) { location.reload(); return; }
+    // Pedimos el motivo una sola vez para este cambio
+    const motivo = prompt(`Motivo del cambio para ${nombre} (en ${campo}):`);
+    
+    if (!motivo) {
+        // Si cancela, revertimos el cambio visualmente
+        location.reload(); 
+        return;
+    }
 
-            await update(ref(db, `jugadores/${id}`), { [campo]: num });
-            await push(ref(db, 'historial'), {
-                jugadorNombre: nombre, campo, antes: viejoVal, ahora: num, diff: num - viejoVal,
-                comentario: motivo, fecha: new Date().toLocaleString('es-AR')
-            });
-        };
+    // Actualizamos el valor en el jugador
+    await update(ref(db, `jugadores/${id}`), { [campo]: num });
 
+    // Guardamos en el historial con el formato detallado que recuperamos antes
+    await push(ref(db, 'historial'), {
+        jugadorNombre: nombre,
+        campo: campo,
+        antes: viejoVal,
+        ahora: num,
+        diff: num - viejoVal,
+        comentario: motivo,
+        fecha: new Date().toLocaleString('es-AR')
+    });
+};
+window.guardarCambiosFila = async (id, nombre, oldPts, oldAsi) => {
+    const newPts = parseInt(document.getElementById(`pts-${id}`).value);
+    const newAsi = parseInt(document.getElementById(`asi-${id}`).value);
+    
+    if (newPts === oldPts && newAsi === oldAsi) return; // No hubo cambios
+
+    const motivo = prompt(`Motivo del cambio para ${nombre}:`);
+    if (!motivo) return;
+
+    const updates = {};
+    const fecha = new Date().toLocaleString('es-AR');
+
+    // Procesar Puntos
+    if (newPts !== oldPts) {
+        updates[`jugadores/${id}/puntos`] = newPts;
+        await push(ref(db, 'historial'), {
+            jugadorNombre: nombre, campo: 'puntos', antes: oldPts, ahora: newPts, 
+            diff: newPts - oldPts, comentario: motivo, fecha: fecha
+        });
+    }
+
+    // Procesar Asistencias
+    if (newAsi !== oldAsi) {
+        updates[`jugadores/${id}/asistencias`] = newAsi;
+        await push(ref(db, 'historial'), {
+            jugadorNombre: nombre, campo: 'asistencias', antes: oldAsi, ahora: newAsi, 
+            diff: newAsi - oldAsi, comentario: motivo, fecha: fecha
+        });
+    }
+
+    await update(ref(db), updates);
+    alert("¡Cambios guardados!");
+};
         window.agregarJugador = async () => {
             const nombre = document.getElementById('nuevo-nombre').value.trim();
             if (!nombre || !obtenerAcceso()) return;
