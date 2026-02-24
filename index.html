@@ -115,6 +115,18 @@
     user-select: none;
     -webkit-user-select: none;
 }
+        .firma-link {
+    color: #0077ff; /* Azul Eléctrico */
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+    text-shadow: 0 0 8px rgba(0, 119, 255, 0.4);
+}
+
+.firma-link:hover {
+    color: #00d4ff; /* Un tono más claro al pasar el mouse */
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.8);
+}
     </style>
 </head>
 <body>
@@ -129,9 +141,9 @@
     </div>
 
     <div class="controles">
-        <input type="password" id="password" placeholder="Clave del Dios">
+        <input type="password" id="password" placeholder="Clave del Dios de la tabla">
         <button onclick="validarYGuardarClave()" style="background: #444;">Acceder</button>
-        <p id="status-clave" style="font-size: 0.8em; margin-top: 5px; color: #aaa;">Acceso requerido para editar.</p>
+        <p id="status-clave" style="font-size: 0.8em; margin-top: 5px; color: #aaa;">Clave requerida para editar (Solo Pipo).</p>
     </div>
 
     <div id="tabla" class="seccion active-section">
@@ -156,7 +168,7 @@
     
     <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-            <input type="text" id="nuevo-regla-txt" placeholder="Nueva regla (ej: No traer parlante)" style="flex-grow: 1;">
+            <input type="text" id="nuevo-regla-txt" placeholder="Nueva regla (ej: Cojer con Max)" style="flex-grow: 1;">
             <input type="number" id="nuevo-regla-pts" placeholder="Pts" style="width: 60px;">
             <button onclick="agregarReglaNueva()" style="background: var(--oro); color: black; font-weight: bold;">Añadir</button>
         </div>
@@ -206,7 +218,9 @@
     <span style="position:absolute; top:20px; right:30px; font-size:40px; color:white; font-weight:bold; cursor:pointer;">&times;</span>
     <img id="foto-grande" src="" style="max-width:95%; max-height:95%; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
 </div>
-
+<footer style="text-align: center; padding: 40px 0 20px; font-size: 0.9em; opacity: 0.8;">
+    Desarrollado por <a href="https://www.linkedin.com/in/nicolas-yabichino/" target="_blank" class="firma-link">NICOYABI</a>
+</footer>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -401,7 +415,7 @@
                 document.getElementById('nuevo-regla-txt').value = '';
                 document.getElementById('nuevo-regla-pts').value = '';
             } else if (!obtenerAcceso()) {
-                alert("¡Epa! No tenés la clave del Dios.");
+                alert("¡Tomatela! No tenés la clave del Dios de la tabla.");
             }
         };
 
