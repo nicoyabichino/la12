@@ -127,6 +127,21 @@
     color: #00d4ff; /* Un tono más claro al pasar el mouse */
     text-shadow: 0 0 12px rgba(0, 212, 255, 0.8);
 }
+.galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas fijas en el celu */
+    gap: 8px;
+    min-height: 50px; /* Para que el div no colapse si está vacío */
+}
+
+.foto-galeria {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Las hace cuadraditas tipo Instagram */
+    object-fit: cover;
+    border-radius: 8px;
+    display: block; /* Evita espacios fantasmas */
+    background: #222; /* Fondo por si tarda en cargar */
+}
     </style>
 </head>
 <body>
@@ -648,9 +663,10 @@ function cargarFotos(evId) {
             const wrapper = document.createElement('div');
             wrapper.style.position = 'relative';
 
-            const imgElement = document.createElement('img');
+      const imgElement = document.createElement('img');
             imgElement.src = imgUrl;
-            imgElement.className = 'foto-galeria'; // Usamos clase para el CSS
+            imgElement.className = 'foto-galeria';
+            imgElement.loading = 'lazy'; // <--- ESTO ES CLAVE PARA CELULARES
             imgElement.onclick = () => {
                 document.getElementById('foto-grande').src = imgUrl;
                 document.getElementById('lightbox').style.display = 'flex';
