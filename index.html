@@ -105,16 +105,6 @@
     display: block;
     cursor: pointer;
 }
-        .regla-item:active {
-    cursor: grabbing;
-    background: rgba(255, 204, 0, 0.1) !important;
-}
-
-/* Para que sea más fácil de tocar en el celular */
-.regla-item {
-    touch-action: none; /* Ayuda a que el drag no scrollee la pantalla */
-    user-select: none;
-}
     </style>
 </head>
 <body>
@@ -328,65 +318,63 @@
         };
 
         // --- REGLAMENTO ---
-let dragSourceIndex = null; // Para saber cuál estamos arrastrando
-
+// --- LÓGICA DE REGLAMENTO ---
 onValue(ref(db, 'reglamento'), (snap) => {
     const data = snap.val();
     const div = document.getElementById('lista-reglamento');
     div.innerHTML = '';
     if (!data) return;
 
-    reglasCache = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-    reglasCache.sort((a, b) => a.orden - b.orden);
+    // Convertimos a array y ordenamos por el campo 'orden'
+    const reglas = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+    reglas.sort((a, b) => a.orden - b.orden);
 
-    reglasCache.forEach((regla, index) => {
+    reglas.forEach((regla, index) => {
         const esAdmin = obtenerAcceso();
-        const item = document.createElement('div');
-        item.className = 'regla-item';
-        // Atributos de arrastre
-        item.draggable = esAdmin; 
-        item.dataset.index = index;
-        
-        item.style = `display:flex; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:8px; padding:12px; border-radius:8px; border-left: 3px solid var(--oro); cursor: ${esAdmin ? 'grab' : 'default'};`;
-
-        // Eventos de Draggable
-        if (esAdmin) {
-            item.ondragstart = (e) => { dragSourceIndex = index; e.target.style.opacity = "0.5"; };
-            item.ondragend = (e) => { e.target.style.opacity = "1"; };
-            item.ondragover = (e) => { e.preventDefault(); }; // Permitir soltar
-            item.ondrop = (e) => { e.preventDefault(); reordenarReglas(dragSourceIndex, index); };
-        }
-
-        item.innerHTML = `
-            <div style="flex-grow:1; pointer-events:none;">
-                <span style="color:var(--oro); font-weight:bold; margin-right:8px;">${index + 1}.</span> 
-                <span style="color:white;">${regla.texto}</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="background:rgba(255,204,0,0.2); color:var(--oro); padding:2px 8px; border-radius:5px; font-weight:bold;">+${regla.puntos}</span>
-                ${esAdmin ? `<button onclick="event.stopPropagation(); borrarRegla('${regla.id}')" style="color:#ff4444; background:none; border:none; cursor:pointer;">✕</button>` : ''}
-            </div>
-        `;
-        div.appendChild(item);
+        div.innerHTML += `
+            <div class="regla-item" style="display:flex; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:8px; padding:12px; border-radius:8px; border-left: 3px solid var(--oro);">
+                <div style="flex-grow:1;">
+                    <span style="color:var(--oro); font-weight:bold; margin-right:8px;">${index + 1}.</span> 
+                    <span ${esAdmin ? `contenteditable="true" onblur="actualizarRegla('${regla.id}', 'texto', this.innerText)"` : ''} style="outline:none;">${regla.texto}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="background:rgba(255,204,0,0.2); color:var(--oro); padding:2px 8px; border-radius:5px; font-weight:bold;">
+                        +<span ${esAdmin ? `contenteditable="true" onblur="actualizarRegla('${regla.id}', 'puntos', this.innerText)"` : ''}>${regla.puntos}</span>
+                    </span>
+                    ${esAdmin ? `<button onclick="borrarRegla('${regla.id}')" style="color:#ff4444; background:none; border:none; cursor:pointer; font-size:1.2em;">✕</button>` : ''}
+                </div>
+            </div>`;
     });
 });
 
-// Función mágica para reordenar todo en Firebase
-window.reordenarReglas = async (desde, hasta) => {
-    if (desde === hasta) return;
+window.agregarReglaNueva = async () => {
+    const txt = document.getElementById('nuevo-regla-txt').value.trim();
+    const pts = document.getElementById('nuevo-regla-pts').value || 0;
+    
+    if (txt && obtenerAcceso()) {
+        await push(ref(db, 'reglamento'), { 
+            texto: txt, 
+            puntos: parseInt(pts), 
+            orden: Date.now() // Esto asegura que la nueva vaya al final
+        });
+        document.getElementById('nuevo-regla-txt').value = '';
+        document.getElementById('nuevo-regla-pts').value = '';
+    } else if (!obtenerAcceso()) {
+        alert("¡Epa! No tenés la clave del Dios.");
+    }
+};
 
-    // Clonamos el array para mover el elemento físicamente
-    const copiaReglas = [...reglasCache];
-    const [removido] = copiaReglas.splice(desde, 1);
-    copiaReglas.splice(hasta, 0, removido);
+window.actualizarRegla = async (id, campo, valor) => {
+    if (!obtenerAcceso()) return;
+    let v = valor;
+    if (campo === 'puntos') v = parseInt(valor) || 0;
+    await update(ref(db, `reglamento/${id}`), { [campo]: v });
+};
 
-    // Creamos un objeto de actualizaciones masivas para Firebase
-    const updates = {};
-    copiaReglas.forEach((regla, nuevoOrden) => {
-        updates[`reglamento/${regla.id}/orden`] = nuevoOrden;
-    });
-
-    await update(ref(db), updates);
+window.borrarRegla = async (id) => {
+    if (obtenerAcceso() && confirm("¿Eliminar esta regla?")) {
+        await set(ref(db, `reglamento/${id}`), null);
+    }
 };
 
         // --- CALENDARIO Y EVENTOS ---
