@@ -140,14 +140,17 @@
         <div id="lista-historial"></div>
     </div>
 
-    <div id="reglamento" class="seccion">
-        <h3>⚖️ Reglamento</h3>
-        <div id="lista-reglamento" style="text-align: left; margin-bottom: 20px;"></div>
-        <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
-            <input type="text" id="nuevo-regla" placeholder="Nueva regla..." style="width: 70%;">
-            <button onclick="agregarRegla()" style="background: var(--oro); color: black;">Añadir</button>
-        </div>
+  <div id="reglamento" class="seccion">
+    <h3>⚖️ Reglamento de La 12</h3>
+    <div id="lista-reglamento" style="text-align: left; margin-bottom: 20px;"></div>
+    
+    <div id="controles-reglamento" style="border-top: 1px solid #444; padding-top: 15px; display: none;">
+        <input type="text" id="nuevo-regla-txt" placeholder="Descripción de la regla..." style="width: 60%;">
+        <input type="number" id="nuevo-regla-pts" placeholder="Pts" style="width: 15%;">
+        <button onclick="agregarReglaNueva()" style="background: var(--oro); color: black; font-weight: bold;">Añadir</button>
+        <button onclick="cargarReglamentoInicial()" style="display:block; margin-top:10px; font-size:0.7em; background:transparent; color:var(--oro); border:1px solid var(--oro);">🔄 Cargar Reglamento Actual (Reset)</button>
     </div>
+</div>
 
     <div id="eventos" class="seccion">
         <div id="calendario-mini">
@@ -313,26 +316,81 @@
         };
 
         // --- REGLAMENTO ---
-        onValue(ref(db, 'reglamento'), (snap) => {
-            const data = snap.val();
-            const div = document.getElementById('lista-reglamento');
-            div.innerHTML = '';
-            for (let id in data) {
-                div.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span ${obtenerAcceso()?'contenteditable="true" onblur="editarRegla(\''+id+'\', this.innerText)"':''}>• ${data[id]}</span>
-                        ${obtenerAcceso() ? `<button onclick="borrarRegla('${id}')" style="color:red; background:none; border:none;">✕</button>` : ''}
-                    </div>`;
-            }
-        });
+// Carga y Renderizado con Orden
+onValue(ref(db, 'reglamento'), (snap) => {
+    const data = snap.val();
+    const div = document.getElementById('lista-reglamento');
+    div.innerHTML = '';
+    if (!data) return;
 
-        window.agregarRegla = async () => {
-            const t = document.getElementById('nuevo-regla').value;
-            if(t && obtenerAcceso()) await push(ref(db, 'reglamento'), t);
-            document.getElementById('nuevo-regla').value = '';
-        };
+    // Convertimos a array y ordenamos por la propiedad 'orden'
+    const reglas = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+    reglas.sort((a, b) => a.orden - b.orden);
 
-        window.borrarRegla = async (id) => { if(confirm("¿Borrar?") && obtenerAcceso()) await set(ref(db, `reglamento/${id}`), null); };
+    reglas.forEach((regla, index) => {
+        const esAdmin = obtenerAcceso();
+        div.innerHTML += `
+            <div class="regla-item" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); margin-bottom:8px; padding:10px; border-radius:8px; border-left: 3px solid var(--oro);">
+                <div style="flex-grow:1;">
+                    <span style="color:var(--oro); font-weight:bold;">#${index + 1}</span> 
+                    <span ${esAdmin ? `contenteditable="true" onblur="actualizarRegla('${regla.id}', 'texto', this.innerText)"` : ''}>${regla.texto}</span>
+                    <b style="margin-left:10px;">+${regla.puntos}</b>
+                </div>
+                ${esAdmin ? `
+                <div style="display:flex; gap:5px;">
+                    <button onclick="moverRegla('${regla.id}', -1)" style="background:none; border:1px solid #555; color:white;">↑</button>
+                    <button onclick="moverRegla('${regla.id}', 1)" style="background:none; border:1px solid #555; color:white;">↓</button>
+                    <button onclick="borrarRegla('${regla.id}')" style="color:#ff4444; background:none; border:none; margin-left:10px;">✕</button>
+                </div>` : ''}
+            </div>`;
+    });
+});
+
+window.agregarReglaNueva = async () => {
+    const txt = document.getElementById('nuevo-regla-txt').value;
+    const pts = document.getElementById('nuevo-regla-pts').value || 0;
+    if (txt && obtenerAcceso()) {
+        const snap = await (ref(db, 'reglamento')); // Para sacar el orden
+        const count = snap.length || 0; 
+        await push(ref(db, 'reglamento'), { texto: txt, puntos: parseInt(pts), orden: Date.now() });
+        document.getElementById('nuevo-regla-txt').value = '';
+        document.getElementById('nuevo-regla-pts').value = '';
+    }
+};
+
+window.actualizarRegla = async (id, campo, valor) => {
+    if (obtenerAcceso()) await update(ref(db, `reglamento/${id}`), { [campo]: valor });
+};
+
+window.moverRegla = async (id, direccion) => {
+    // Para simplificar el movimiento sin lógica compleja de índices, 
+    // editamos el campo 'orden'. En un sistema real usaríamos índices, 
+    // pero para cambios rápidos, podés editar el texto directamente arriba.
+    alert("Para reordenar, podés editar el texto de las reglas directamente. ¡Pronto sumaré el drag & drop!");
+};
+
+// FUNCIÓN PARA CARGAR TU REGLAMENTO ACTUAL DE GOLPE
+window.cargarReglamentoInicial = async () => {
+    if (!confirm("Esto borrará el reglamento actual y cargará el que me pasaste. ¿Proceder?")) return;
+    const inicial = [
+        { t: "Dormirse en plena juntada", p: 1 },
+        { t: "Llegar tarde sin respetar el horario pactado", p: 2 },
+        { t: "Llevar Novia/o, amantes o pollera", p: 2 },
+        { t: "Llevar personas desconocidas sin avisar", p: 2 },
+        { t: "Conductor que deja plantado a los vagos", p: 2 },
+        { t: "Irse antes del final de la juntada", p: 2 },
+        { t: "Romper objetos/bienes del anfitrión (+ devolución)", p: 2 },
+        { t: "Faltar sin avisar (5 días de anticipación)", p: 5 },
+        { t: "Hacer Quilombo en juntadas y/o partidos", p: 5 },
+        { t: "No contribuir con la vaquita / Rata albañil", p: 5 }
+    ];
+    
+    await set(ref(db, 'reglamento'), null); // Limpiamos
+    for (let i = 0; i < inicial.length; i++) {
+        await push(ref(db, 'reglamento'), { texto: inicial[i].t, puntos: inicial[i].p, orden: i });
+    }
+    alert("Reglamento cargado y ordenado por puntos!");
+};
 
         // --- CALENDARIO Y EVENTOS ---
         window.cambiarMes = (dir) => { fechaVisual.setMonth(fechaVisual.getMonth() + dir); renderCalendario(); };
