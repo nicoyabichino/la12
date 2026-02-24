@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La 12 - Gestión de Puntos</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <style>
+<style>
         :root { --oro: #ffcc00; --fondo: #1a1a1a; }
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -31,117 +31,37 @@
         .controles { text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
         input { padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; margin: 5px; }
         
-        /* Estilos Calendario */
+        /* Calendario */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-       .dia { 
-    padding: 15px 0; /* Más espacio para tocar con el dedo */
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-size: 1em; 
-    background: rgba(255,255,255,0.05); 
-    transition: 0.2s;
-}
-.dia:active { transform: scale(0.9); } /* Efecto de click */
+        .dia { padding: 15px 0; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.05); transition: 0.2s; }
+        .dia:active { transform: scale(0.9); }
         .con-evento { background: var(--oro) !important; color: black; font-weight: bold; }
         
-        .galeria-grid img { 
-    width: 100%; height: 100px; object-fit: cover; 
-    border-radius: 6px; border: 1px solid #333; 
-    transition: transform 0.2s; 
-    cursor: pointer; /* Esto pone la manito al pasar el mouse */
-}
-.galeria-grid img:hover { transform: scale(1.05); filter: brightness(1.2); }
-        .galeria img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #444; }
-
+        /* Historial y Reglas */
         .historial-item { border-left: 4px solid var(--oro); padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 0 8px 8px 0; text-align: left; }
         .fecha { font-size: 0.75em; color: var(--oro); font-weight: bold; }
-        /* Estilos de la Card de Evento */
-.event-card {
-    background: rgba(40, 40, 40, 0.95);
-    border: 2px solid var(--oro);
-    border-radius: 15px;
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s ease-in-out;
-}
+        .sortable-ghost { opacity: 0.4; background: var(--oro) !important; }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Event Card */
+        .event-card { background: rgba(40, 40, 40, 0.95); border: 2px solid var(--oro); border-radius: 15px; padding: 20px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .event-card-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 15px; }
+        .event-card-header h2 { font-size: 2em; color: var(--oro); margin: 0; text-transform: uppercase; }
+        .badge { background: #444; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; color: var(--oro); display: inline-block; }
+        .event-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .btn-puntos, .btn-subir { background: #333; color: white; border: 1px solid #555; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+        .btn-subir { background: #28a745; border: none; }
+        .btn-eliminar { width: 100%; background: none; color: #ff4444; border: 1px dashed #ff4444; margin-top: 20px; padding: 10px; cursor: pointer; }
 
-.event-card-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 15px; }
-.event-card-header h2 { font-size: 2em; color: var(--oro); margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        /* Galería Unificada */
+        .galeria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 0; }
+        .foto-galeria { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; background: #333; display: block; cursor: pointer; transition: 0.2s; }
+        .foto-galeria:hover { transform: scale(1.03); filter: brightness(1.1); }
 
-.badge { background: #444; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; color: var(--oro); display: inline-block; margin-top: 5px; }
-
-.event-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
-
-.btn-puntos, .btn-subir { 
-    background: #333; color: white; border: 1px solid #555; padding: 10px 15px; 
-    border-radius: 8px; font-size: 0.9em; cursor: pointer; transition: 0.3s;
-}
-.btn-puntos:hover { background: var(--oro); color: black; }
-.btn-subir { background: #28a745; border: none; } /* Verde para resaltar subida */
-
-/* Galería tipo Instagram/Pinterest */
-.galeria-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-    gap: 8px; 
-}
-.galeria-grid img { 
-    width: 100%; height: 100px; object-fit: cover; 
-    border-radius: 6px; border: 1px solid #333; 
-    transition: transform 0.2s; cursor: pointer;
-}
-.galeria-grid img:hover { transform: scale(1.05); z-index: 2; }
-
-.btn-eliminar { width: 100%; background: none; color: #ff4444; border: 1px dashed #ff4444; margin-top: 20px; font-size: 0.8em; }
-        .foto-galeria {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #333;
-    display: block;
-    cursor: pointer;
-}
-        .sortable-ghost {
-    opacity: 0.4;
-    background: var(--oro) !important;
-}
-
-.handle {
-    user-select: none;
-    -webkit-user-select: none;
-}
-        .firma-link {
-    color: #0077ff; /* Azul Eléctrico */
-    text-decoration: none;
-    font-weight: bold;
-    transition: 0.3s;
-    text-shadow: 0 0 8px rgba(0, 119, 255, 0.4);
-}
-
-.firma-link:hover {
-    color: #00d4ff; /* Un tono más claro al pasar el mouse */
-    text-shadow: 0 0 12px rgba(0, 212, 255, 0.8);
-}
-.galeria-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas fijas en el celu */
-    gap: 8px;
-    min-height: 50px; /* Para que el div no colapse si está vacío */
-}
-
-.foto-galeria {
-    width: 100%;
-    aspect-ratio: 1 / 1; /* Las hace cuadraditas tipo Instagram */
-    object-fit: cover;
-    border-radius: 8px;
-    display: block; /* Evita espacios fantasmas */
-    background: #222; /* Fondo por si tarda en cargar */
-}
+        /* Footer y Firma */
+        .firma-link { color: #0077ff; text-decoration: none; font-weight: bold; transition: 0.3s; text-shadow: 0 0 8px rgba(0, 119, 255, 0.4); }
+        .firma-link:hover { color: #00d4ff; text-shadow: 0 0 12px rgba(0, 212, 255, 0.8); }
     </style>
 </head>
 <body>
@@ -633,16 +553,39 @@ window.crearEvento = async () => {
             }
         };
 
-        window.subirFotoDirecta = () => {
-            const file = document.getElementById('input-foto').files[0];
-            if (!file || !eventoSeleccionadoId) return;
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                await push(ref(db, `fotos/${eventoSeleccionadoId}`), reader.result);
-                alert("Foto lista!");
-            };
-            reader.readAsDataURL(file);
+window.subirFotoDirecta = () => {
+    const file = document.getElementById('input-foto').files[0];
+    if (!file || !eventoSeleccionadoId) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800; 
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Comprimimos a JPEG calidad 0.6 (se ve joya y vuela)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            push(ref(db, `fotos/${eventoSeleccionadoId}`), dataUrl);
+            alert("✅ Foto optimizada y subida!");
         };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
 
 function cargarFotos(evId) {
     onValue(ref(db, `fotos/${evId}`), (snap) => {
