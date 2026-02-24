@@ -554,12 +554,12 @@ window.crearEvento = async () => {
         };
 
 window.subirFotoDirecta = async () => {
-    const file = document.getElementById('input-foto').files[0];
-    const apiKey = '2791ae5e35dca772d137a09c367832ff'; // <-- PONÉ TU CLAVE ACÁ
+    const input = document.getElementById('input-foto'); // Referencia al input
+    const file = input.files[0];
+    const apiKey = '2791ae5e35dca772d137a09c367832ff'; 
     
     if (!file || !eventoSeleccionadoId) return;
 
-    // Mostrar un "cargando" sencillo
     const btn = document.querySelector('.btn-subir');
     const textoOriginal = btn.innerHTML;
     btn.innerHTML = "⏳ Subiendo...";
@@ -577,10 +577,9 @@ window.subirFotoDirecta = async () => {
         const data = await response.json();
 
         if (data.success) {
-            // Guardamos solo el LINK en Firebase, mucho más liviano
             const urlImagen = data.data.display_url;
             await push(ref(db, `fotos/${eventoSeleccionadoId}`), urlImagen);
-            alert("✅ ¡Foto subida con éxito!");
+            // Quitamos el alert para que sea más fluido, la foto aparecerá sola
         } else {
             alert("Error al subir a ImgBB");
         }
@@ -590,6 +589,7 @@ window.subirFotoDirecta = async () => {
     } finally {
         btn.innerHTML = textoOriginal;
         btn.style.opacity = "1";
+        input.value = ""; // <--- ¡ESTO! Limpia el input para que puedas subir la misma foto otra vez si quieres
     }
 };
 
