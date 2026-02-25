@@ -83,7 +83,13 @@
 
     <div id="tabla" class="seccion active-section">
         <table>
-            <thead><tr><th>Nombre</th><th>Puntos</th><th>Asistencias</th></tr></thead>
+            <thead>
+    <tr>
+        <th>Nombre</th>
+        <th>Puntos</th>
+        <th>Asistencias</th>
+        <th class="solo-admin" style="display:none;">Acción</th> </tr>
+</thead>
             <tbody id="tabla-cuerpo"></tbody>
         </table>
         <div id="controles-admin" style="margin-top:20px; border-top: 1px solid #444; padding-top:15px;">
@@ -225,50 +231,59 @@ window.validarYGuardarClave = () => {
         };
 
         // --- TABLA ---
-        onValue(ref(db, 'jugadores'), (snap) => {
-            const data = snap.val();
-            const tabla = document.getElementById('tabla-cuerpo');
-            if (!tabla) return;
-            tabla.innerHTML = '';
-            const lista = [];
-            for (let id in data) lista.push({id, ...data[id]});
-           // El que tiene más puntos va abajo. 
-// Si empatan en puntos, el que tiene MENOS asistencias va arriba (va perdiendo).
-lista.sort((a, b) => {
-    if (b.puntos !== a.puntos) {
-        return b.puntos - a.puntos; // Primero por puntos (descendente)
-    }
-    return a.asistencias - b.asistencias; // Luego por asistencias (ascendente)
-});
-lista.forEach(j => {
-    const fila = document.createElement('tr');
+// --- TABLA ---
+onValue(ref(db, 'jugadores'), (snap) => {
+    const data = snap.val();
+    const tabla = document.getElementById('tabla-cuerpo');
+    if (!tabla) return;
+    tabla.innerHTML = '';
+    const lista = [];
+    for (let id in data) lista.push({id, ...data[id]});
+
+    // Orden: Más puntos abajo, menos asistencias arriba si empatan
+    lista.sort((a, b) => {
+        if (b.puntos !== a.puntos) return b.puntos - a.puntos;
+        return a.asistencias - b.asistencias;
+    });
+
     const esAdmin = obtenerAcceso();
     
-    // Aplicamos el estilo solo si el nombre es el tuyo
-    const esNicolas = j.nombre.toLowerCase().includes("Nico") || j.nombre.toLowerCase().includes("Gordo");
-    const estiloNombre = esNicolas 
-        ? 'color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); font-weight: bold; font-style: italic;' 
-        : 'font-weight: bold;';
+    // Mostramos u ocultamos el encabezado de acción según si es admin
+    const thAccion = document.querySelector('.solo-admin');
+    if(thAccion) thAccion.style.display = esAdmin ? 'table-cell' : 'none';
 
-    fila.innerHTML = `
-        <td><span style="${estiloNombre}">${j.nombre}</span></td>
-        <td>
-            <input type="number" value="${j.puntos}" 
-                ${esAdmin ? '' : 'disabled'} 
-                id="pts-${j.id}" 
-                style="width:50px; background:none; color:white; border:none; text-align:center;">
-        </td>
-        <td>
-            <input type="number" value="${j.asistencias}" 
-                ${esAdmin ? '' : 'disabled'} 
-                id="asi-${j.id}" 
-                style="width:50px; background:none; color:white; border:none; text-align:center;">
-        </td>
-        ${esAdmin ? `<td><button onclick="guardarCambiosFila('${j.id}', '${j.nombre}', ${j.puntos}, ${j.asistencias})" style="padding:5px; font-size:0.8em;">💾</button></td>` : ''}
-    `;
-    tabla.appendChild(fila);
+    lista.forEach(j => {
+        const fila = document.createElement('tr');
+        
+        // CORRECCIÓN NOMBRE: Pasamos todo a minúsculas para que no falle el "Nico" o "nico"
+        const nombreBuscado = j.nombre.toLowerCase();
+        const esNicolas = nombreBuscado.includes("nico") || nombreBuscado.includes("gordo") || nombreBuscado.includes("yabichino");
+        
+        const estiloNombre = esNicolas 
+            ? 'color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); font-weight: bold; font-style: italic;' 
+            : 'font-weight: bold;';
+
+        const nombreFinal = esNicolas ? `👑 ${j.nombre}` : j.nombre;
+
+        fila.innerHTML = `
+            <td><span style="${estiloNombre}">${nombreFinal}</span></td>
+            <td>
+                <input type="number" value="${j.puntos}" 
+                    ${esAdmin ? '' : 'disabled'} 
+                    id="pts-${j.id}" 
+                    style="width:50px; background:none; color:white; border:none; text-align:center;">
+            </td>
+            <td>
+                <input type="number" value="${j.asistencias}" 
+                    ${esAdmin ? '' : 'disabled'} 
+                    id="asi-${j.id}" 
+                    style="width:50px; background:none; color:white; border:none; text-align:center;">
+            </td>
+            ${esAdmin ? `<td><button onclick="guardarCambiosFila('${j.id}', '${j.nombre}', ${j.puntos}, ${j.asistencias})" style="padding:5px; font-size:0.8em; background:none; border:1px solid #555; border-radius:4px; color:white;">💾</button></td>` : ''}
+        `;
+        tabla.appendChild(fila);
+    });
 });
-        });
 
 window.modificar = async (id, campo, nuevoVal, viejoVal, nombre) => {
     const num = parseInt(nuevoVal);
