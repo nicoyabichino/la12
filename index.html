@@ -254,22 +254,47 @@ onValue(ref(db, 'jugadores'), (snap) => {
 
 lista.forEach(j => {
     const fila = document.createElement('tr');
+    const esAdmin = obtenerAcceso();
     
-    // CORRECCIÓN NOMBRE: Pasamos todo a minúsculas
-    const nombreBuscado = j.nombre.toLowerCase();
-    const esNicolas = nombreBuscado.includes("nico") || nombreBuscado.includes("gordo") || nombreBuscado.includes("yabichino");
+    // --- DICCIONARIO DE FRASES (Editá acá los mensajes) ---
+    const mensajes = {
+        "arce": "Ya me activaste, ahora pasa la ubi rraaaay!",
+        "augusto": "Me gusta el chorizo",
+        "guana": "Que culpa tengo yo de que ese toque me active",
+        "josue": "No me toques, estoy laburando",
+        "leomax": "Si no sos Max no me toques",
+        "nico": "mmm ¿te gusta tocar, putita? 😏",
+        "gordo": "mmm ¿te gusta tocar, pichón? 😏", // Por si figurás como Gordo
+        "pana": "Si te soy honesto, ese toque me gustó",
+        "pipo": "Si son mas de las 20 ya estoy en cama papilo",
+        "titou": "Therian disponible para cruza",
+        "toly": "Perdon taba durmiendo",
+        "zamo": "Ahora ya cagaste te voy desarmar el oyo"
+    };
+
+    // Buscamos si el nombre actual tiene una frase (usamos minúsculas para que no falle)
+    const nombreLower = j.nombre.toLowerCase();
+    let frase = "¡Un Therian salvaje ha aparecido!"; // Frase por defecto
     
+    // Recorremos las claves del diccionario para ver si alguna coincide
+    for (let clave in mensajes) {
+        if (nombreLower.includes(clave)) {
+            frase = mensajes[clave];
+            break;
+        }
+    }
+
+    const esNicolas = nombreLower.includes("nico") || nombreLower.includes("gordo") || nombreLower.includes("yabichino");
+    
+    // Estilo especial solo para vos, el resto normal con cursor de click
     const estiloNombre = esNicolas 
         ? 'color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); font-weight: bold; font-style: italic; cursor: pointer;' 
-        : 'font-weight: bold;';
+        : 'font-weight: bold; cursor: pointer;';
 
-    // Si sos vos, le agregamos el "onclick" con el chiste
-    const nombreFinal = esNicolas 
-        ? `<span style="${estiloNombre}" onclick="alert('mmm ¿te gusta tocar, putita? 😏')">👑 ${j.nombre}</span>` 
-        : `<span>${j.nombre}</span>`;
+    const nombreMostrado = esNicolas ? `👑 ${j.nombre}` : j.nombre;
 
     fila.innerHTML = `
-        <td>${nombreFinal}</td>
+        <td><span style="${estiloNombre}" onclick="alert('${frase}')">${nombreMostrado}</span></td>
         <td>
             <input type="number" value="${j.puntos}" 
                 ${esAdmin ? '' : 'disabled'} 
