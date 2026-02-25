@@ -182,20 +182,26 @@
         let eventoSeleccionadoId = null;
 
         // --- SEGURIDAD ---
-        window.validarYGuardarClave = () => {
-            const input = document.getElementById('password').value.trim().toLowerCase();
-            const status = document.getElementById('status-clave');
-            
-            if(btoa(input) === CLAVE_OCULTA) {
-                sessionStorage.setItem('acceso_v12', 'ok');
-                status.innerText = "✅ Bienvenido, Dios de la tabla.";
-                status.style.color = "#44ff44";
-                document.getElementById('password').value = "";
-                habilitarEdicion();
-            } else {
-                alert("Clave incorrecta.");
-            }
-        };
+window.validarYGuardarClave = () => {
+    const input = document.getElementById('password').value.trim().toLowerCase();
+    const status = document.getElementById('status-clave');
+    
+    if(btoa(input) === CLAVE_OCULTA) {
+        sessionStorage.setItem('acceso_v12', 'ok');
+        status.innerText = "✅ Bienvenido, Dios de la tabla!.";
+        status.style.color = "#44ff44";
+        
+        // Esto es lo que faltaba:
+        habilitarEdicion(); 
+        
+        // Y esto recarga la tabla y eventos para que aparezcan los botones 💾 y 🗑️
+        alert("Acceso concedido Pipon!. Cargando herramientas de Etherian...");
+        location.reload(); 
+
+    } else {
+        alert("No es esa papilo!.");
+    }
+};
 
         const obtenerAcceso = () => sessionStorage.getItem('acceso_v12') === 'ok';
 
@@ -239,7 +245,7 @@ lista.forEach(j => {
     const esAdmin = obtenerAcceso();
     
     // Aplicamos el estilo solo si el nombre es el tuyo
-    const esNicolas = j.nombre.toLowerCase().includes("nicolas") || j.nombre.toLowerCase().includes("yabichino");
+    const esNicolas = j.nombre.toLowerCase().includes("Nico") || j.nombre.toLowerCase().includes("Gordo");
     const estiloNombre = esNicolas 
         ? 'color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); font-weight: bold; font-style: italic;' 
         : 'font-weight: bold;';
