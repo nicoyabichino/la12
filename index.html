@@ -237,8 +237,15 @@ lista.sort((a, b) => {
 lista.forEach(j => {
     const fila = document.createElement('tr');
     const esAdmin = obtenerAcceso();
+    
+    // Aplicamos el estilo solo si el nombre es el tuyo
+    const esNicolas = j.nombre.toLowerCase().includes("nicolas") || j.nombre.toLowerCase().includes("yabichino");
+    const estiloNombre = esNicolas 
+        ? 'color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); font-weight: bold; font-style: italic;' 
+        : 'font-weight: bold;';
+
     fila.innerHTML = `
-        <td><b>${j.nombre}</b></td>
+        <td><span style="${estiloNombre}">${j.nombre}</span></td>
         <td>
             <input type="number" value="${j.puntos}" 
                 ${esAdmin ? '' : 'disabled'} 
